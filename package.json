@@ -53,6 +53,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "start": "node dist/cli/index.js",
     "prepublishOnly": "npm run typecheck && npm run check && npm test && npm run build"
   },
@@ -68,6 +69,7 @@
   },
   "devDependencies": {
     "@dagrejs/dagre": "^3.0.0",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

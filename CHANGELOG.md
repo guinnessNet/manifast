@@ -21,6 +21,16 @@ Pre-publish hardening; no user-facing behavior change.
 - **Refactors (internal, no behavior change):** `smoothPath` extracted to a pure
   module (`src/web/lib/smoothPath.ts`); `buildApp()` split out of `createServer()`
   so the server can be driven headlessly in tests.
+- **E2E (Playwright):** drives the built SPA (`dist/web`) served by the real CLI —
+  boot + live pill, switch all 5 views, theme + accent persist across reload,
+  canvas zoom/Fit, `.zip` export download, Map bezier edges, and live-reload of a
+  new doc. The e2e workspace lifecycle is owned by `global-setup.ts` for clean
+  cross-platform teardown.
+- **CI (GitHub Actions):** matrix Node 20/22 × ubuntu/windows → typecheck →
+  schema-drift guard → test → build → SSR check → `npm pack --dry-run`; a separate
+  Linux e2e job; and a tag-gated `npm publish --provenance` job (runs `prepublishOnly`).
+- **`.gitattributes`** pins LF so the schema-drift `git diff` guard is deterministic
+  across OSes.
 
 ## 1.2.15
 

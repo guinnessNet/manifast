@@ -13,3 +13,6 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+
+# throwaway e2e workspace (copied from skill/examples by global-setup)
+test/.e2e-workspace/
