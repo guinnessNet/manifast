@@ -18,5 +18,8 @@ export default defineConfig({
     environment: "node",
     include: ["test/**/*.test.{ts,tsx}"],
     globals: false,
+    // jest-dom matchers are only loaded for DOM-environment test files (which
+    // opt in via a `// @vitest-environment jsdom` docblock).
+    setupFiles: ["test/setup.dom.ts"],
   },
 });
