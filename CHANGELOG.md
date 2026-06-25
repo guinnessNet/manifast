@@ -31,6 +31,10 @@ Pre-publish hardening; no user-facing behavior change.
   Linux e2e job; and a tag-gated `npm publish --provenance` job (runs `prepublishOnly`).
 - **`.gitattributes`** pins LF so the schema-drift `git diff` guard is deterministic
   across OSes.
+- **Perf smoke:** a test parses 300+ docs incl. a ~200KB one and re-reads from the
+  mtime cache, guarding the head-16KB + cache fast-path.
+- **a11y guards (e2e):** key controls expose accessible names, the theme toggle is
+  keyboard-operable, and Tab reaches interactive controls.
 
 ## 1.2.15
 
