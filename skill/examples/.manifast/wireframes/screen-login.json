@@ -1,0 +1,74 @@
+{
+  "schema": "manifast.wireframe/1",
+  "id": "screen-login",
+  "name": "로그인",
+  "device": "mobile",
+  "size": { "w": 390, "h": 844 },
+  "background": "#FFFFFF",
+  "root": [
+    {
+      "id": "n1",
+      "type": "Text",
+      "frame": { "x": 24, "y": 96, "w": 342, "h": 36 },
+      "content": "로그인",
+      "role": "h1",
+      "align": "left"
+    },
+    {
+      "id": "n2",
+      "type": "Text",
+      "frame": { "x": 24, "y": 136, "w": 342, "h": 20 },
+      "content": "계정에 로그인하세요",
+      "role": "caption"
+    },
+    {
+      "id": "n3",
+      "type": "Input",
+      "frame": { "x": 24, "y": 176, "w": 342, "h": 44 },
+      "label": "이메일",
+      "placeholder": "you@example.com",
+      "kind": "email"
+    },
+    {
+      "id": "n4",
+      "type": "Input",
+      "frame": { "x": 24, "y": 240, "w": 342, "h": 44 },
+      "label": "비밀번호",
+      "kind": "password"
+    },
+    {
+      "id": "n5",
+      "type": "Checkbox",
+      "frame": { "x": 24, "y": 300, "w": 200, "h": 20 },
+      "label": "로그인 상태 유지",
+      "checked": true
+    },
+    {
+      "id": "n6",
+      "type": "Button",
+      "frame": { "x": 24, "y": 340, "w": 342, "h": 48 },
+      "label": "로그인",
+      "variant": "primary",
+      "size": "lg"
+    },
+    {
+      "id": "n7",
+      "type": "Button",
+      "frame": { "x": 24, "y": 400, "w": 342, "h": 44 },
+      "label": "회원가입",
+      "variant": "secondary"
+    },
+    {
+      "id": "n8",
+      "type": "Divider",
+      "frame": { "x": 24, "y": 468, "w": 342, "h": 1 }
+    },
+    {
+      "id": "n9",
+      "type": "Button",
+      "frame": { "x": 24, "y": 484, "w": 342, "h": 44 },
+      "label": "비밀번호를 잊으셨나요?",
+      "variant": "ghost"
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "$ref": "#/definitions/Tasks",
+  "definitions": {
+    "Tasks": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "manifast.tasks/1"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done",
+                  "blocked"
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "med",
+                  "high"
+                ],
+                "default": "med"
+              },
+              "specId": {
+                "type": "string"
+              },
+              "wireframeId": {
+                "type": "string"
+              },
+              "deps": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "tasks"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

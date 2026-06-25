@@ -1,0 +1,19 @@
+{
+  "schema": "manifast.plan/1",
+  "phases": [
+    {
+      "id": "p1",
+      "name": "MVP 인증",
+      "goal": "로그인 / 회원가입 흐름 완성",
+      "status": "active",
+      "taskIds": ["task-1", "task-2"]
+    },
+    {
+      "id": "p2",
+      "name": "대시보드",
+      "goal": "핵심 지표 시각화",
+      "status": "planned",
+      "taskIds": ["task-3", "task-4", "task-5"]
+    }
+  ]
+}

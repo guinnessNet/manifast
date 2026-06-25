@@ -1,0 +1,712 @@
+{
+  "$ref": "#/definitions/Wireframe",
+  "definitions": {
+    "Wireframe": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "manifast.wireframe/1"
+        },
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "device": {
+          "type": "string",
+          "enum": [
+            "desktop",
+            "tablet",
+            "mobile"
+          ]
+        },
+        "size": {
+          "type": "object",
+          "properties": {
+            "w": {
+              "type": "number"
+            },
+            "h": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "w",
+            "h"
+          ],
+          "additionalProperties": false
+        },
+        "background": {
+          "type": "string"
+        },
+        "root": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "frame": {
+                    "type": "object",
+                    "properties": {
+                      "x": {
+                        "type": "number"
+                      },
+                      "y": {
+                        "type": "number"
+                      },
+                      "w": {
+                        "type": "number"
+                      },
+                      "h": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "x",
+                      "y",
+                      "w",
+                      "h"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Box"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "card",
+                      "section",
+                      "plain"
+                    ]
+                  },
+                  "children": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/definitions/Wireframe/properties/root/items"
+                    },
+                    "default": []
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Text"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "h1",
+                      "h2",
+                      "h3",
+                      "body",
+                      "caption",
+                      "label"
+                    ]
+                  },
+                  "align": {
+                    "type": "string",
+                    "enum": [
+                      "left",
+                      "center",
+                      "right"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type",
+                  "content"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Button"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "variant": {
+                    "type": "string",
+                    "enum": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  },
+                  "size": {
+                    "type": "string",
+                    "enum": [
+                      "sm",
+                      "md",
+                      "lg"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type",
+                  "label"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Input"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "text",
+                      "search",
+                      "password",
+                      "email",
+                      "number"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Textarea"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "rows": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Checkbox"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "checked": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Radio"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "checked": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Toggle"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "on": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Select"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "placeholder": {
+                    "type": "string"
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Image"
+                  },
+                  "ratio": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Avatar"
+                  },
+                  "shape": {
+                    "type": "string",
+                    "enum": [
+                      "circle",
+                      "square"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Icon"
+                  },
+                  "size": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Divider"
+                  },
+                  "orientation": {
+                    "type": "string",
+                    "enum": [
+                      "horizontal",
+                      "vertical"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Badge"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "tone": {
+                    "type": "string",
+                    "enum": [
+                      "neutral",
+                      "info",
+                      "success",
+                      "warning",
+                      "danger"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type",
+                  "label"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Navbar"
+                  },
+                  "brand": {
+                    "type": "string"
+                  },
+                  "links": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Table"
+                  },
+                  "columns": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "rows": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type",
+                  "columns"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "List"
+                  },
+                  "items": {
+                    "type": "number"
+                  },
+                  "withAvatar": {
+                    "type": "boolean"
+                  },
+                  "withIcon": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/id"
+                  },
+                  "name": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/name"
+                  },
+                  "frame": {
+                    "$ref": "#/definitions/Wireframe/properties/root/items/anyOf/0/properties/frame"
+                  },
+                  "type": {
+                    "type": "string",
+                    "const": "Tabs"
+                  },
+                  "tabs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "activeIndex": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "id",
+                  "frame",
+                  "type",
+                  "tabs"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "name",
+        "device",
+        "size",
+        "root"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

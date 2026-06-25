@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.vite/
+Thumbs.db
+*.swp
+
+# packaged tarballs (`npm pack`)
+*.tgz
+
+# test / coverage output (added in later phases)
+coverage/
+playwright-report/
+test-results/

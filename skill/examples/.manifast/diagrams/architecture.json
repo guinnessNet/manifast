@@ -1,0 +1,34 @@
+{
+  "schema": "manifast.diagram/1",
+  "id": "arch",
+  "title": "Manifast 아키텍처",
+  "kind": "architecture",
+  "direction": "LR",
+  "generatedBy": "claude-code",
+  "generatedAt": "2026-06-24",
+  "groups": [
+    { "id": "pkg", "label": "manifast package" },
+    { "id": "data", "label": "workspace (.manifast/ + docs/)" }
+  ],
+  "nodes": [
+    { "id": "cli", "label": "CLI", "group": "pkg", "kind": "module", "description": "manifast / init" },
+    { "id": "server", "label": "Server (Fastify)", "group": "pkg", "kind": "service", "description": "REST + WS + static" },
+    { "id": "watcher", "label": "Watcher (chokidar)", "group": "pkg", "kind": "module" },
+    { "id": "workspace", "label": "workspace.ts", "group": "pkg", "kind": "module", "description": "discover + zod validate" },
+    { "id": "schema", "label": "shared zod schema", "group": "pkg", "kind": "module" },
+    { "id": "web", "label": "Web SPA (React)", "group": "pkg", "kind": "module" },
+    { "id": "files", "label": ".manifast files", "group": "data", "kind": "db" },
+    { "id": "browser", "label": "Browser", "kind": "external" }
+  ],
+  "edges": [
+    { "from": "cli", "to": "server", "kind": "starts", "label": "starts" },
+    { "from": "server", "to": "workspace", "kind": "uses" },
+    { "from": "server", "to": "watcher", "kind": "uses" },
+    { "from": "workspace", "to": "schema", "kind": "validates", "label": "zod" },
+    { "from": "web", "to": "schema", "kind": "imports", "label": "types" },
+    { "from": "server", "to": "web", "kind": "serves", "label": "static" },
+    { "from": "browser", "to": "server", "kind": "calls", "label": "HTTP/WS" },
+    { "from": "watcher", "to": "files", "kind": "watches" },
+    { "from": "workspace", "to": "files", "kind": "reads" }
+  ]
+}

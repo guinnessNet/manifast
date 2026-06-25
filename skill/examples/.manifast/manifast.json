@@ -1,0 +1,9 @@
+{
+  "schema": "manifast/1",
+  "project": {
+    "name": "Manifast Demo",
+    "description": "Example workspace seeded by `manifast init`."
+  },
+  "generatedBy": "claude-code",
+  "updatedAt": "2026-06-24"
+}

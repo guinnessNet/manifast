@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+/* Dark variant keyed off the #mf-root[data-theme="dark"] wrapper (App.tsx).
+   Most surfaces are driven by the CSS variables below and flip automatically,
+   so `dark:` is only needed for the rare non-variable case. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Design tokens (imported from the Claude Design system, Manifast.dc.html) ──
+   Scoped to #mf-root so data-theme / data-accent on the wrapper drive everything. */
+#mf-root {
+  --font: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --bg: #f6f6f7; --bg-elevated: #ffffff; --sidebar-bg: #fbfbfc;
+  --border: #e9e9ec; --border-soft: #f0f0f2;
+  --text: #18181b; --text-muted: #6b6b76; --text-faint: #a1a1aa;
+  --accent: #6366f1; --accent-fg: #ffffff; --accent-subtle: #eef0fe; --accent-border: #c7c9f9; --accent-soft: #f3f4fe;
+  --grid-dot: #e4e4e8;
+  --wire-fill: #f0f0f2; --wire-panel: #fafafb; --wire-line: #e2e2e6; --wire-text: #d6d6db; --wire-strong: #c2c2c9; --wire-button: #b4b4bc;
+  --err-bg: #fef3f2; --err-border: #fcd9d4; --err-text: #b42318;
+  --ok: #16a34a; --ok-bg: #e9f7ef; --ok-border: #bce8cd;
+  --warn: #b45309; --warn-bg: #fdf4e3; --warn-border: #f5d99b;
+}
+#mf-root[data-theme="dark"] {
+  --bg: #0b0b0d; --bg-elevated: #141417; --sidebar-bg: #101013;
+  --border: #26262b; --border-soft: #1d1d21;
+  --text: #ededf0; --text-muted: #8e8e98; --text-faint: #5c5c66;
+  --accent: #7c7ff7; --accent-fg: #0b0b0d; --accent-subtle: #1d1d38; --accent-border: #3a3a6b; --accent-soft: #17172b;
+  --grid-dot: #1f1f24;
+  --wire-fill: #1c1c20; --wire-panel: #161619; --wire-line: #2a2a30; --wire-text: #34343c; --wire-strong: #44444e; --wire-button: #3c3c46;
+  --err-bg: #251315; --err-border: #5a2424; --err-text: #f8a39a;
+  --ok: #4ade80; --ok-bg: #10271c; --ok-border: #1f5036;
+  --warn: #fbbf24; --warn-bg: #2a1f0a; --warn-border: #5a3f15;
+}
+#mf-root[data-accent="emerald"] { --accent: #10b981; --accent-fg: #ffffff; --accent-subtle: #e7f7f0; --accent-border: #a6e4cf; --accent-soft: #f1fbf7; }
+#mf-root[data-accent="orange"] { --accent: #f97316; --accent-fg: #ffffff; --accent-subtle: #fdeee2; --accent-border: #f8cfa6; --accent-soft: #fef6ef; }
+#mf-root[data-accent="blue"] { --accent: #3b82f6; --accent-fg: #ffffff; --accent-subtle: #e8f0fe; --accent-border: #b6d0fb; --accent-soft: #f2f7ff; }
+#mf-root[data-theme="dark"][data-accent="emerald"] { --accent: #34d399; --accent-fg: #08120e; --accent-subtle: #10271f; --accent-border: #1f4d3c; --accent-soft: #0f1f18; }
+#mf-root[data-theme="dark"][data-accent="orange"] { --accent: #fb923c; --accent-fg: #1a0f06; --accent-subtle: #2a1a0e; --accent-border: #5a371b; --accent-soft: #1f140a; }
+#mf-root[data-theme="dark"][data-accent="blue"] { --accent: #60a5fa; --accent-fg: #06101f; --accent-subtle: #13233f; --accent-border: #244a78; --accent-soft: #0f1a2e; }
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  color: #18181b;
+  background: #f6f6f7;
+  -webkit-font-smoothing: antialiased;
+}
+
+#mf-root {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+}
+
+#mf-root *,
+#mf-root *::before,
+#mf-root *::after {
+  box-sizing: border-box;
+}
+
+@keyframes mf-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+#mf-root ::-webkit-scrollbar { height: 9px; width: 9px; }
+#mf-root ::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+#mf-root button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* Wireframe / map canvas dot-grid backdrop (the transform-tracking version is
+   applied inline; this is the static fallback). */
+.mf-canvas-bg {
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Markdown body (DocView) */
+.mf-prose {
+  color: var(--text-muted);
+  line-height: 1.75;
+  font-size: 14.5px;
+}
+.mf-prose h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin: 1.4rem 0 0.8rem; line-height: 1.2; }
+.mf-prose h2 { font-size: 1.25rem; font-weight: 600; color: var(--text); margin: 1.9rem 0 0.75rem; border-bottom: 1px solid var(--border-soft); padding-bottom: 0.4rem; }
+.mf-prose h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin: 1.4rem 0 0.5rem; }
+.mf-prose p { margin: 0 0 0.9rem; }
+.mf-prose strong { color: var(--text); font-weight: 600; }
+.mf-prose ul { list-style: disc; padding-left: 1.4rem; margin: 0.6rem 0 1rem; }
+.mf-prose ol { list-style: decimal; padding-left: 1.4rem; margin: 0.6rem 0 1rem; }
+.mf-prose li { margin: 0.35rem 0; }
+.mf-prose a { color: var(--accent); text-decoration: underline; }
+.mf-prose code {
+  background: var(--bg); border: 1px solid var(--border); padding: 0.05rem 0.35rem; border-radius: 5px;
+  font-size: 0.85em; font-family: var(--mono); color: var(--text);
+}
+.mf-prose pre {
+  background: var(--bg); padding: 0.9rem 1rem; border-radius: 9px; overflow: auto;
+  margin: 0 0 1.1rem; border: 1px solid var(--border);
+}
+.mf-prose pre code { background: none; border: none; padding: 0; font-size: 0.8rem; color: var(--text); }
+.mf-prose blockquote {
+  border-left: 3px solid var(--accent-border); background: var(--accent-soft);
+  border-radius: 0 8px 8px 0; padding: 0.7rem 1rem; color: var(--text-muted); margin: 0 0 1rem;
+}
+.mf-prose table { border-collapse: collapse; margin: 0 0 1rem; width: 100%; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.mf-prose th, .mf-prose td { border-bottom: 1px solid var(--border-soft); padding: 0.55rem 0.85rem; text-align: left; }
+.mf-prose th { background: var(--bg); font-weight: 600; color: var(--text); border-bottom: 1px solid var(--border); }
+.mf-prose td { color: var(--text-muted); }
+.mf-prose input[type="checkbox"] { margin-right: 0.4rem; }
+.mf-prose img { max-width: 100%; }
+.mf-prose hr { border: none; border-top: 1px solid var(--border); margin: 1.2rem 0; }
+
+/* brief flash when a view live-reloads */
+@keyframes mf-flash {
+  0% { background-color: var(--accent-soft); }
+  100% { background-color: transparent; }
+}
+.mf-flash { animation: mf-flash 0.5s ease-out; }

@@ -1,0 +1,104 @@
+{
+  "$ref": "#/definitions/DocFrontmatter",
+  "definitions": {
+    "DocFrontmatter": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "type": "string",
+          "const": "manifast.doc/1"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "prd",
+            "spec",
+            "doc",
+            "adr",
+            "tutorial",
+            "howto",
+            "reference",
+            "explanation",
+            "architecture"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "active",
+            "done",
+            "deprecated",
+            "archived"
+          ],
+          "default": "draft"
+        },
+        "wireframe": {
+          "type": "string"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "related": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner": {
+          "type": "string"
+        },
+        "lastReviewed": {
+          "type": "string"
+        },
+        "reviewBy": {
+          "type": "number"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "critical": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "deprecatedAt": {
+          "type": "string"
+        },
+        "archivedAt": {
+          "type": "string"
+        },
+        "deprecatedBy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "type",
+        "title"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
