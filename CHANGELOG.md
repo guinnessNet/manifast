@@ -3,9 +3,11 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
-## Unreleased — production-readiness groundwork
+## 1.0.0 — first public release (2026-06-26)
 
-Pre-publish hardening; no user-facing behavior change.
+The first npm-ready release. Pre-publish hardening on top of the internal 1.2.x
+line (see the note below the 1.2.x entries); no user-facing behavior change versus
+1.2.15 — this is the trust/packaging milestone, not a feature drop.
 
 - **Packaging:** MIT `LICENSE` + `license` field; `repository`/`homepage`/`bugs`/
   `author`/`keywords`; `publishConfig.access=public`; a `prepublishOnly` gate

@@ -2,7 +2,7 @@
 
 **A local, read-only visualizer for AI-authored wireframes and dev docs.**
 
-> v1.2.15 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
+> v1.0.0 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
 JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
