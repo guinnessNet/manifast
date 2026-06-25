@@ -3,6 +3,33 @@
   "version": "1.2.15",
   "description": "Local, read-only visualizer + live-reload + export for AI-authored wireframes and dev docs (.manifast/).",
   "type": "module",
+  "license": "MIT",
+  "author": "kjh <kjh@maipharm.com>",
+  "homepage": "https://github.com/guinnessNet/manifast#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/guinnessNet/manifast.git"
+  },
+  "bugs": {
+    "url": "https://github.com/guinnessNet/manifast/issues"
+  },
+  "keywords": [
+    "wireframe",
+    "documentation",
+    "docs",
+    "prd",
+    "spec",
+    "kanban",
+    "roadmap",
+    "diagram",
+    "live-reload",
+    "ai",
+    "agent",
+    "local",
+    "offline",
+    "cli",
+    "visualizer"
+  ],
   "bin": {
     "manifast": "dist/cli/index.js"
   },
@@ -13,6 +40,9 @@
   "engines": {
     "node": ">=20"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "gen:schema": "tsx scripts/gen-schema.ts",
@@ -21,7 +51,9 @@
     "build": "npm run gen:schema && npm run build:web && npm run build:server",
     "check": "tsx scripts/ssr-check.tsx",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/cli/index.js"
+    "test": "echo \"No test suite yet — vitest lands in Phase 1. Failing loudly so prepublishOnly cannot ship untested.\" && exit 1",
+    "start": "node dist/cli/index.js",
+    "prepublishOnly": "npm run typecheck && npm run check && npm test && npm run build"
   },
   "dependencies": {
     "@fastify/static": "^8.0.4",
