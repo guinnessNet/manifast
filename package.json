@@ -50,6 +50,7 @@
     "build:server": "tsx scripts/build-server.ts",
     "build": "npm run gen:schema && npm run build:web && npm run build:server",
     "check": "tsx scripts/ssr-check.tsx",
+    "shots": "node scripts/shots.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -81,6 +81,11 @@ resolved while a browser held the live-reload WebSocket open. Now the server for
 sockets (+ Fastify `forceCloseConnections`), and the CLI has a 2s force-exit fallback (a second
 Ctrl+C exits immediately).
 
+> **Note on the 1.2.1 → 1.2.12 jump:** versions 1.2.2–1.2.11 were local,
+> unreleased iterations (no global install, no tag) whose changes were folded into
+> the 1.2.12+ entries above. The history is intentionally continuous from 1.2.12
+> onward now that the project is being prepared for publication.
+
 ## 1.2.1
 
 **Dogfood fixes** (after applying v4 to a real repo and evaluating the result):

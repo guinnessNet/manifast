@@ -16,6 +16,16 @@ scaffolds and installs the skill, and never overwrites anything). The single
 source of truth is the `.manifast/` folder; the server just reads, validates,
 and serves it.
 
+## Screenshots
+
+![Wireframe canvas](docs/screenshots/wireframes.png)
+
+| Docs | Tasks |
+|---|---|
+| ![Docs](docs/screenshots/docs.png) | ![Tasks board](docs/screenshots/tasks.png) |
+| **Plan** | **Map** |
+| ![Roadmap](docs/screenshots/plan.png) | ![Relationship map](docs/screenshots/map.png) |
+
 ---
 
 ## Requirements
