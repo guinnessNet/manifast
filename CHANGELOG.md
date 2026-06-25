@@ -3,6 +3,25 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
+## Unreleased — production-readiness groundwork
+
+Pre-publish hardening; no user-facing behavior change.
+
+- **Packaging:** MIT `LICENSE` + `license` field; `repository`/`homepage`/`bugs`/
+  `author`/`keywords`; `publishConfig.access=public`; a `prepublishOnly` gate
+  (`typecheck && check && test && build`) so `npm publish` can't ship stale/untested output.
+- **Test suite (vitest):** 100 unit + integration tests covering the zod schemas,
+  the 1.2.15 graph logic (`graph.ts`: orphans, `related` both directions, id/uid
+  resolution, `sources` overlap, doc↔doc + chained source edges, no self/dupe edges),
+  `links.ts`, `layout.ts`, the extracted `smoothPath` curve, `workspace.ts`
+  (parse/inferDocType/slug/16KB head/mtime cache), the **only writer** `edit.ts`
+  (uid + status only, body + EOL preserved, idempotent) through `POST /api/doc/*`,
+  the REST API via `app.inject()`, **path-traversal confinement (P0 security)**,
+  the watcher's dir-vs-file split, and the graceful-shutdown force-close.
+- **Refactors (internal, no behavior change):** `smoothPath` extracted to a pure
+  module (`src/web/lib/smoothPath.ts`); `buildApp()` split out of `createServer()`
+  so the server can be driven headlessly in tests.
+
 ## 1.2.15
 
 **Fewer false orphan docs — doc↔doc relationships.** The Map flagged docs as

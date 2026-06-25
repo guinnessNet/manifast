@@ -67,7 +67,18 @@ function resolveSafe(root: string, rel: string): string | null {
   return target;
 }
 
-export async function createServer(opts: ServerOptions): Promise<RunningServer> {
+export interface BuiltApp {
+  app: ReturnType<typeof Fastify>;
+  /** Tear down sockets + watcher + the Fastify app (idempotent-safe). */
+  close: () => Promise<void>;
+}
+
+/**
+ * Build the fully-wired Fastify app (REST + WS + watcher + optional static SPA)
+ * WITHOUT binding a socket, so tests can drive it via `app.inject()`. The
+ * listening wrapper lives in `createServer`.
+ */
+export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
   const app = Fastify({ logger: false, forceCloseConnections: true });
   await app.register(fastifyWebsocket);
 
@@ -194,6 +205,27 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
     });
   }
 
+  const close = async () => {
+    // Browsers keep the /ws live-reload socket open; without forcing them
+    // shut, app.close() waits forever and Ctrl+C appears to hang.
+    for (const s of sockets) {
+      try {
+        (s.terminate ?? s.close)?.call(s);
+      } catch {
+        /* ignore */
+      }
+    }
+    sockets.clear();
+    await watcher.close();
+    await app.close();
+  };
+
+  return { app, close };
+}
+
+export async function createServer(opts: ServerOptions): Promise<RunningServer> {
+  const { app, close } = await buildApp(opts);
+
   // --- Listen -------------------------------------------------------------
   const host = opts.host ?? "127.0.0.1";
   const port = await findFreePort(opts.port, host);
@@ -202,19 +234,6 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
   return {
     port,
     url: `http://localhost:${port}`,
-    close: async () => {
-      // Browsers keep the /ws live-reload socket open; without forcing them
-      // shut, app.close() waits forever and Ctrl+C appears to hang.
-      for (const s of sockets) {
-        try {
-          (s.terminate ?? s.close)?.call(s);
-        } catch {
-          /* ignore */
-        }
-      }
-      sockets.clear();
-      await watcher.close();
-      await app.close();
-    },
+    close,
   };
 }
