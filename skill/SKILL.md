@@ -223,8 +223,9 @@ coordinates) and renders it in the **Map** view.
   "schema": "manifast.diagram/1",
   "id": "arch",
   "title": "System architecture",
-  "kind": "architecture",        // architecture | docmap | flow | ...
-  "direction": "LR",             // TB | LR | BT | RL (optional)
+  "kind": "architecture",        // architecture | docmap | sitemap | flow | ...
+  "layout": "layered",           // layered | radial | tree (optional — inferred from kind)
+  "direction": "LR",             // TB | LR | BT | RL (optional; used by layered/tree)
   "groups": [{ "id": "api", "label": "API" }],
   "nodes": [
     { "id": "server", "label": "API server", "group": "api", "kind": "service" },
@@ -234,10 +235,29 @@ coordinates) and renders it in the **Map** view.
 }
 ```
 
+**Pick the layout to match the content's shape — this is the #1 lever on readability.**
+The app renders three strategies; set `layout` explicitly, or let it be inferred from `kind`:
+
+| content shape | `layout` | `kind` that infers it | looks like |
+|---|---|---|---|
+| **document/feature relationships** (many-to-many cross-refs) | `radial` | `docmap` · `mindmap` · `relations` | **mind map** — a hub at center, related nodes on rings outward |
+| **sitemap / nav / doc taxonomy** (single-parent hierarchy) | `tree` | `sitemap` · `tree` · `hierarchy` | top-down tidy tree |
+| **backend / architecture / dataflow** (directional tiers) | `layered` | `architecture` · `flow` · everything else | dagre lanes, `groups` as tiers, follows `direction` |
+
+Rules of thumb:
+- **Relationships → `radial`, NOT layered.** A doc/concept map forced through layered dagre
+  reads as a meaningless left-right flow. Radial picks the highest-degree node as the hub;
+  author so the *intended* center is the most-connected node. `groups` are not drawn in radial
+  (a mind map is hub-centric) — rely on `node.kind` tints instead.
+- **Architecture/backend → `layered`** with `groups` as tiers (e.g. `ui` / `api` / `data`) and a
+  consistent `direction`. This is the one case dagre is right for.
+- **Keep a hand-authored diagram focused (≤ ~25 nodes).** Big graphs are for the auto map, which
+  aggregates (below). If you need more, split into several diagrams or use groups as tiers.
+
 - Analyze the real project (folders, modules, imports/deps, entry points — and the
   root `CLAUDE.md` / `AGENTS.md` / `README.md`, which Manifast now also shows) and
   emit nodes + edges. Don't compute positions; the app handles layout.
-- `node.kind` (module|service|layer|db|external|doc|…) just tints the box; `edge.kind`는
+- `node.kind` (module|service|layer|db|external|doc|folder|…) just tints the box; `edge.kind`는
   자유 형식이지만 **아래 권장 어휘를 우선 사용**하고 맞는 게 없으면 `other`를 쓴다:
   `implements` · `supersedes` · `references` · `plans-for` · `results` · `includes` ·
   `uses` · `produces` · `rollup` · `absorbed-by` · `next` · `sibling`.
@@ -248,7 +268,12 @@ coordinates) and renders it in the **Map** view.
   ref is cleaner.)
 - Set `generatedAt` when you (re)generate it. Don't leave half the nodes edgeless — add
   `relates`/`supersedes` edges or rely on groups so the map reads as structure, not a list.
-  Manifast also shows an **auto** project map (doc↔wireframe↔task↔plan links) with no file needed.
+- Manifast also shows an **auto** project map (doc↔wireframe↔task↔plan links) with no file
+  needed. It is `docmap` (renders radial). **At scale (40+ docs) it aggregates by default** —
+  docs collapse into `dir:<folder>` super-nodes (with counts) and tasks into their plan phase,
+  so it reads as a ~dozen-node structure overview instead of a hairball. The Map toolbar has
+  **개별 문서 펼치기 / 폴더로 집계** to toggle, plus **focus** (click a node → its neighborhood)
+  for drill-down. So you do not need to hand-author a diagram just to see project structure.
 
 ## 6. Links (single source of truth — no duplication)
 

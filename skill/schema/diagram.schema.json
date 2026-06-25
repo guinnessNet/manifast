@@ -27,6 +27,14 @@
             "RL"
           ]
         },
+        "layout": {
+          "type": "string",
+          "enum": [
+            "layered",
+            "radial",
+            "tree"
+          ]
+        },
         "generatedBy": {
           "type": "string"
         },

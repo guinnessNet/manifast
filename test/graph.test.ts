@@ -94,6 +94,41 @@ describe("buildProjectMap", () => {
     expect(new Set(keys).size).toBe(keys.length);
   });
 
+  it("aggregate: collapses docs into dir:<folder> super-nodes with counts and rolled-up edges", () => {
+    const ws = workspace({
+      docs: [
+        doc({ id: "a", path: "docs/specs/a.md", related: ["b"] }),
+        doc({ id: "b", path: "docs/specs/b.md" }),
+        doc({ id: "c", path: "docs/c.md", related: ["a"] }),
+      ],
+    });
+    const m = buildProjectMap(ws, false, true);
+    const ids = m.nodes.map((n) => n.id);
+    expect(ids).toEqual(expect.arrayContaining(["dir:docs/specs", "dir:docs"]));
+    expect(ids.some((i) => i.startsWith("doc:"))).toBe(false); // every doc collapsed
+    const specs = m.nodes.find((n) => n.id === "dir:docs/specs")!;
+    expect(specs.kind).toBe("folder");
+    expect(specs.label).toContain("(2)"); // a + b
+    expect(m.edges.some((e) => e.from === e.to)).toBe(false); // intra-folder a↔b self-loop dropped
+    // cross-folder related edge (docs/c → docs/specs/a) survives, remapped onto folders.
+    expect(m.edges.some((e) => e.from === "dir:docs" && e.to === "dir:docs/specs")).toBe(true);
+  });
+
+  it("aggregate: collapses tasks into their plan phase (with task count) and rewires phase→folder", () => {
+    const ws = workspace({
+      docs: [doc({ id: "spec", path: "docs/specs/spec.md" })],
+      tasks: { path: "t", ok: true, tasks: [{ id: "t1", title: "T", status: "todo", specId: "spec" }] },
+      plan: { path: "p", ok: true, phases: [{ id: "ph1", name: "P1", status: "planned", taskIds: ["t1"] }] },
+    });
+    const m = buildProjectMap(ws, false, true);
+    const ids = m.nodes.map((n) => n.id);
+    expect(ids.some((i) => i.startsWith("task:"))).toBe(false); // tasks rolled into phase
+    expect(ids).toEqual(expect.arrayContaining(["phase:ph1", "dir:docs/specs"]));
+    expect(m.nodes.find((n) => n.id === "phase:ph1")!.label).toContain("1 tasks");
+    // phase→task→doc:spec chain becomes phase→folder.
+    expect(m.edges.some((e) => e.from === "phase:ph1" && e.to === "dir:docs/specs")).toBe(true);
+  });
+
   it("includes wireframe, task and phase nodes with link edges", () => {
     const ws = workspace({
       wireframes: [wf({ id: "login" })],

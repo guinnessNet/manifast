@@ -39,6 +39,7 @@ export const DiagramFileSchema = z.object({
   title: z.string(),
   kind: z.string().optional().default("diagram"), // architecture|docmap|flow|...
   direction: z.enum(["TB", "LR", "BT", "RL"]).optional(), // layout direction
+  layout: z.enum(["layered", "radial", "tree"]).optional(), // visual strategy; default inferred from kind (docmap→radial, sitemap/tree→tree, else layered)
   generatedBy: z.string().optional(),
   generatedAt: z.string().optional(),
   groups: z.array(DiagramGroupSchema).optional(),

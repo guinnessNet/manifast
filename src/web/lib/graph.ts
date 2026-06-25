@@ -7,7 +7,7 @@ import type { DiagramFile, DiagramNode, DiagramEdge } from "@shared/schema/diagr
  * By default, docs with no links are omitted so the graph shows real structure
  * instead of a hairball of isolated nodes; pass includeUnlinkedDocs to show all.
  */
-export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false): DiagramFile {
+export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false, aggregateDocs = false): DiagramFile {
   const nodes: DiagramNode[] = [];
   const edges: DiagramEdge[] = [];
 
@@ -73,7 +73,7 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false): 
     }
   }
 
-  return {
+  const map: DiagramFile = {
     schema: "manifast.diagram/1",
     id: "__project__",
     title: "Project map (auto)",
@@ -88,6 +88,84 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false): 
     nodes,
     edges,
   };
+
+  // At scale (e.g. 150+ docs) one-node-per-doc is an unreadable hairball. Collapse
+  // docs into folder super-nodes and tasks into their phase, so the map reads as a
+  // ~dozen-node structure overview. The "개별 문서 펼치기" toggle returns to full.
+  return aggregateDocs ? aggregateOverview(map, ws) : map;
+}
+
+/** Immediate parent folder of a repo-relative path ("docs/specs/x.md" → "docs/specs"). */
+function folderOf(path: string): string {
+  const i = path.lastIndexOf("/");
+  return i < 0 ? "(root)" : path.slice(0, i);
+}
+
+/**
+ * Structure-overview aggregation: collapse each `doc:<id>` into a `dir:<folder>`
+ * super-node (with a count), each `task:<id>` into its `phase:<id>` (phase labelled
+ * with a task count), and drop standalone wireframe/task chips. Edges are remapped
+ * onto the survivors, with self-loops dropped and duplicates merged. A 150-doc +
+ * 17-task hairball becomes ~a dozen folder/phase nodes that read as real structure.
+ */
+function aggregateOverview(map: DiagramFile, ws: WorkspaceDTO): DiagramFile {
+  const folderByDocId = new Map<string, string>();
+  for (const d of ws.items.docs) folderByDocId.set(d.id, folderOf(d.path));
+  const phaseByTaskId = new Map<string, string>();
+  const taskCountByPhase = new Map<string, number>();
+  for (const p of ws.items.plan?.phases ?? []) {
+    for (const tid of p.taskIds ?? []) {
+      phaseByTaskId.set(tid, p.id);
+      taskCountByPhase.set(p.id, (taskCountByPhase.get(p.id) ?? 0) + 1);
+    }
+  }
+
+  // Map any original node id onto its survivor (or null = dropped).
+  const remap = (nodeId: string): string | null => {
+    if (nodeId.startsWith("doc:")) return `dir:${folderByDocId.get(nodeId.slice(4)) ?? "(root)"}`;
+    if (nodeId.startsWith("task:")) {
+      const ph = phaseByTaskId.get(nodeId.slice(5));
+      return ph ? `phase:${ph}` : null; // unphased tasks drop out of the overview
+    }
+    if (nodeId.startsWith("wf:")) return null;
+    return nodeId; // phase:* (and any other) pass through
+  };
+
+  const folderCount = new Map<string, number>();
+  for (const n of map.nodes) {
+    if (n.id.startsWith("doc:")) {
+      const fid = remap(n.id)!;
+      folderCount.set(fid, (folderCount.get(fid) ?? 0) + 1);
+    }
+  }
+  const folderNodes: DiagramNode[] = [...folderCount].map(([fid, c]) => ({
+    id: fid,
+    label: `${fid.slice(4)} (${c})`,
+    group: "docs",
+    kind: "folder",
+  }));
+  const phaseNodes: DiagramNode[] = map.nodes
+    .filter((n) => n.id.startsWith("phase:"))
+    .map((n) => {
+      const c = taskCountByPhase.get(n.id.slice(6)) ?? 0;
+      return { ...n, label: c ? `${n.label} · ${c} tasks` : n.label };
+    });
+  const nodes = [...folderNodes, ...phaseNodes];
+  const ids = new Set(nodes.map((n) => n.id));
+
+  const seen = new Set<string>();
+  const edges: DiagramEdge[] = [];
+  for (const e of map.edges) {
+    const from = remap(e.from);
+    const to = remap(e.to);
+    if (!from || !to || from === to || !ids.has(from) || !ids.has(to)) continue;
+    const key = `${from}|${to}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    edges.push({ from, to, kind: e.kind });
+  }
+
+  return { ...map, nodes, edges };
 }
 
 /** Resolve a doc reference (by id OR uid) to its canonical doc id. */

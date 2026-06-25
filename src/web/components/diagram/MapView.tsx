@@ -20,6 +20,7 @@ const KIND_HUE: Record<string, string> = {
   db: "#d97706",
   phase: "#f59e0b",
   external: "#94a3b8",
+  folder: "#0ea5e9",
 };
 
 function refToTarget(ref: DiagramRef): NavTarget | null {
@@ -37,6 +38,9 @@ export interface MapViewProps {
 export function MapView({ data, tick }: MapViewProps) {
   const [selected, setSelected] = useState("__project__");
   const [showAllDocs, setShowAllDocs] = useState(false);
+  // At scale, the auto project map collapses docs into folder super-nodes by
+  // default so it reads as structure instead of a 150-node hairball.
+  const [aggregate, setAggregate] = useState(() => data.items.docs.length > 40);
   const [focusMode, setFocusMode] = useState(false);
   const [focusId, setFocusId] = useState<string | null>(null);
   const [depth, setDepth] = useState(2);
@@ -45,7 +49,7 @@ export function MapView({ data, tick }: MapViewProps) {
   const [showStale, setShowStale] = useState(false);
   const navigate = useNavigate();
 
-  const auto = useMemo(() => buildProjectMap(data, showAllDocs), [data, showAllDocs]);
+  const auto = useMemo(() => buildProjectMap(data, showAllDocs, aggregate), [data, showAllDocs, aggregate]);
   const hiddenDocs = data.items.docs.length - auto.nodes.filter((n) => n.kind === "doc").length;
   const selMeta = data.items.diagrams.find((d) => d.path === selected);
   const { file } = useFile(selected === "__project__" ? undefined : selected, tick);
@@ -137,7 +141,16 @@ export function MapView({ data, tick }: MapViewProps) {
             {diagram.nodes.length} nodes · {diagram.edges.length} edges
           </span>
         )}
-        {selected === "__project__" && (hiddenDocs > 0 || showAllDocs) && (
+        {selected === "__project__" && (
+          <button
+            onClick={() => setAggregate((s) => !s)}
+            title="문서를 폴더 단위로 묶어 구조만 보기 / 개별 문서 펼치기"
+            className="rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
+          >
+            {aggregate ? "개별 문서 펼치기" : "폴더로 집계"}
+          </button>
+        )}
+        {selected === "__project__" && !aggregate && (hiddenDocs > 0 || showAllDocs) && (
           <button
             onClick={() => setShowAllDocs((s) => !s)}
             className="rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
