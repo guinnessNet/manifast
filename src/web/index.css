@@ -8,11 +8,15 @@
 /* ── Design tokens (imported from the Claude Design system, Manifast.dc.html) ──
    Scoped to #mf-root so data-theme / data-accent on the wrapper drive everything. */
 #mf-root {
-  --font: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* Korean-first body stack: Pretendard (Latin+Hangul) → Geist/system → explicit
+     Hangul fallbacks so 한글 renders in a high-legibility face on every OS. */
+  --font: "Pretendard Variable", Pretendard, "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
   --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --bg: #f6f6f7; --bg-elevated: #ffffff; --sidebar-bg: #fbfbfc;
   --border: #e9e9ec; --border-soft: #f0f0f2;
-  --text: #18181b; --text-muted: #6b6b76; --text-faint: #a1a1aa;
+  /* Contrast on the #f6f6f7/#ffffff surfaces (WCAG AA, normal text ≥4.5:1):
+     text 16:1, muted #52525b ~7:1, faint #6b6b76 ~4.8:1. */
+  --text: #18181b; --text-muted: #52525b; --text-faint: #6b6b76;
   --accent: #6366f1; --accent-fg: #ffffff; --accent-subtle: #eef0fe; --accent-border: #c7c9f9; --accent-soft: #f3f4fe;
   --grid-dot: #e4e4e8;
   --wire-fill: #f0f0f2; --wire-panel: #fafafb; --wire-line: #e2e2e6; --wire-text: #d6d6db; --wire-strong: #c2c2c9; --wire-button: #b4b4bc;
@@ -23,7 +27,8 @@
 #mf-root[data-theme="dark"] {
   --bg: #0b0b0d; --bg-elevated: #141417; --sidebar-bg: #101013;
   --border: #26262b; --border-soft: #1d1d21;
-  --text: #ededf0; --text-muted: #8e8e98; --text-faint: #5c5c66;
+  /* Dark surfaces (#0b0b0d/#141417): text 15:1, muted #9a9aa4 ~6.6:1, faint #7a7a84 ~4.6:1. */
+  --text: #ededf0; --text-muted: #9a9aa4; --text-faint: #7a7a84;
   --accent: #7c7ff7; --accent-fg: #0b0b0d; --accent-subtle: #1d1d38; --accent-border: #3a3a6b; --accent-soft: #17172b;
   --grid-dot: #1f1f24;
   --wire-fill: #1c1c20; --wire-panel: #161619; --wire-line: #2a2a30; --wire-text: #34343c; --wire-strong: #44444e; --wire-button: #3c3c46;
@@ -46,7 +51,7 @@ body,
 
 body {
   margin: 0;
-  font-family: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: "Pretendard Variable", Pretendard, "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
   color: #18181b;
   background: #f6f6f7;
   -webkit-font-smoothing: antialiased;
@@ -86,11 +91,13 @@ body {
   background-size: 24px 24px;
 }
 
-/* Markdown body (DocView) */
+/* Markdown body (DocView) — body text uses the full-strength --text token
+   (was --text-muted, which read as washed-out gray and failed comfortable
+   reading contrast). Secondary chrome (td, blockquote) still uses --muted. */
 .mf-prose {
-  color: var(--text-muted);
+  color: var(--text);
   line-height: 1.75;
-  font-size: 14.5px;
+  font-size: 15px;
 }
 .mf-prose h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.01em; color: var(--text); margin: 1.4rem 0 0.8rem; line-height: 1.2; }
 .mf-prose h2 { font-size: 1.25rem; font-weight: 600; color: var(--text); margin: 1.9rem 0 0.75rem; border-bottom: 1px solid var(--border-soft); padding-bottom: 0.4rem; }
