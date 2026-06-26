@@ -3,6 +3,25 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
+## 1.2.0 — user-flow & feature-tree views (2026-06-26)
+
+- **New "User Flow" view.** Agent-authored `kind:"flow"` diagrams render as a
+  dedicated, read-only user flow: typed nodes — `start`/`end` (green/red **pills**),
+  `page` (clicks through to its wireframe via `ref`), `action`, `decision` — laid out
+  top-down/left-right by dagre with **arrowed, labelled edges** (e.g. `예`/`아니오`).
+  Lives in its own sidebar tab; no in-app editing — the agent authors the JSON, the app
+  draws + live-reloads + exports.
+- **New "Tree" view.** `kind:"tree"` hierarchy diagrams render top-down as a feature
+  tree (`project → requirement → feature → detail`) with per-level node colors and the
+  1–3 line intent in `node.description`. Its own sidebar tab.
+- **Map view now has Export.** The diagram views (Map / User Flow / Tree) gain a
+  PNG / SVG menu (+ raw JSON for an authored diagram) — the Map view previously had none.
+- **Authoring contract:** `skill/SKILL.md` + `AGENTS.md` document the flow/tree recipes
+  and conventional node kinds; seeded `examples/.manifast/diagrams/{user-flow,feature-tree}.json`.
+- Internals: `MapView` gains a `mode` (`map`/`flow`/`tree`) that scopes the existing
+  dagre renderer by diagram kind (`isFlowKind`/`isTreeKind` in `lib/layout.ts`) — one
+  renderer, no duplication; `ssr-check` guards both new examples (parse + layout).
+
 ## 1.1.0 — collapsible docs folder tree (2026-06-26)
 
 - **The Docs sidebar is now a collapsible folder tree.** The flat, full-path
