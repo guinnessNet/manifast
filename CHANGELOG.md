@@ -3,6 +3,18 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
+## 1.0.1 — doc readability (2026-06-26)
+
+- **Markdown body contrast:** `.mf-prose` body text now uses the full-strength
+  `--text` token (was `--text-muted`, which read as washed-out gray). Secondary
+  chrome (blockquote, table cells) stays muted.
+- **WCAG AA gray tokens:** darkened `--text-muted`/`--text-faint` on both themes
+  to clear ≥4.5:1 (light muted #52525b ~7:1, faint #6b6b76 ~4.8:1; dark muted
+  #9a9aa4 ~6.6:1, faint #7a7a84 ~4.6:1). Body size 14.5px→15px.
+- **Korean font stack:** lead with Pretendard and keep explicit Hangul fallbacks
+  (Apple SD Gothic Neo / Malgun Gothic / Noto Sans KR) so 한글 no longer falls
+  back to bare `system-ui`.
+
 ## 1.0.0 — first public release (2026-06-26)
 
 The first npm-ready release. Pre-publish hardening on top of the internal 1.2.x
