@@ -229,9 +229,9 @@ edges or rely on groups. Manifast also shows an auto project map (links) with no
 Pick `kind`/`layout` to match the shape: `flow`/`userflow` → directional **user flow** (its own
 **User Flow** tab) with typed nodes `start|end` (pills) · `page` (add `ref:{kind:"wireframe",id}`) ·
 `action` · `decision`, and **labelled** edges (`"예"`/`"아니오"`); `tree`/`sitemap` → top-down
-**feature tree** (`project|requirement|feature|detail` parent→child edges, intent in
-`description`); `docmap`/`mindmap` → radial mind map; else → layered architecture. See
-`examples/.manifast/diagrams/user-flow.json`.
+**feature tree** (its own **Tree** tab; `project|requirement|feature|detail` parent→child edges,
+intent in `description`); `docmap`/`mindmap` → radial mind map; else → layered architecture. See
+`examples/.manifast/diagrams/{user-flow,feature-tree}.json`.
 
 ## 6. Links (single source of truth — no duplication)
 

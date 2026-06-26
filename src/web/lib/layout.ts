@@ -62,6 +62,12 @@ export function isFlowKind(kind?: string): boolean {
   return FLOW_KINDS.has((kind ?? "").toLowerCase());
 }
 
+/** Diagram kinds that read as a top-down hierarchy / feature tree. */
+const TREE_KINDS = new Set(["tree", "sitemap", "hierarchy", "featuretree", "feature-tree"]);
+export function isTreeKind(kind?: string): boolean {
+  return TREE_KINDS.has((kind ?? "").toLowerCase());
+}
+
 export function layoutDiagram(d: DiagramFile): Layout {
   switch (resolveLayout(d)) {
     case "radial":

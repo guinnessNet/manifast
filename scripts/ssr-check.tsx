@@ -15,7 +15,7 @@ import { LinkChip } from "../src/web/components/LinkChip";
 import { MapView } from "../src/web/components/diagram/MapView";
 import { NavContext } from "../src/web/lib/nav";
 import { buildProjectMap } from "../src/web/lib/graph";
-import { layoutDiagram, isFlowKind } from "../src/web/lib/layout";
+import { layoutDiagram, isFlowKind, isTreeKind } from "../src/web/lib/layout";
 import { DiagramFileSchema } from "@shared/schema/diagram";
 
 let ok = true;
@@ -85,6 +85,11 @@ check("agent architecture diagram laid out (dagre)", al.nodes.length === arch.no
 const flow = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/user-flow.json", "utf8")));
 const fl = layoutDiagram(flow);
 check("user-flow diagram parses + laid out", isFlowKind(flow.kind) && fl.nodes.length === flow.nodes.length && fl.width > 0);
+
+// 7c. feature-tree diagram parses (kind=tree) + lays out
+const tree = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/feature-tree.json", "utf8")));
+const tl = layoutDiagram(tree);
+check("feature-tree diagram parses + laid out", isTreeKind(tree.kind) && tl.nodes.length === tree.nodes.length && tl.width > 0);
 
 console.log(ok ? "\nALL SSR CHECKS PASSED" : "\nSSR CHECKS FAILED");
 process.exit(ok ? 0 : 1);

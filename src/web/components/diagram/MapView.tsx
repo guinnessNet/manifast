@@ -6,7 +6,7 @@ import { Canvas } from "../wireframe/Canvas";
 import { ErrorBanner } from "../ErrorBanner";
 import { MapExportMenu } from "../ExportMenu";
 import { buildProjectMap, getOrphanDocs, getNeighborhood, filterDiagram } from "../../lib/graph";
-import { layoutDiagram, isFlowKind, type Layout } from "../../lib/layout";
+import { layoutDiagram, isFlowKind, isTreeKind, type Layout } from "../../lib/layout";
 import { smoothPath } from "../../lib/smoothPath";
 import { useNavigate, type NavTarget } from "../../lib/nav";
 import { cn } from "../../lib/cn";
@@ -59,16 +59,25 @@ function refToTarget(ref: DiagramRef): NavTarget | null {
 export interface MapViewProps {
   data: WorkspaceDTO;
   tick: number;
-  /** "flow" scopes the view to user-flow diagrams (powers the dedicated Flow tab). */
-  mode?: "map" | "flow";
+  /** "flow"/"tree" scope the view to user-flow / hierarchy diagrams (dedicated tabs). */
+  mode?: "map" | "flow" | "tree";
+}
+
+// Predicate that picks which diagrams a scoped view (flow/tree) shows.
+function modeMatch(mode: "map" | "flow" | "tree"): ((kind?: string) => boolean) | null {
+  return mode === "flow" ? isFlowKind : mode === "tree" ? isTreeKind : null;
 }
 
 export function MapView({ data, tick, mode = "map" }: MapViewProps) {
-  const flowDiagrams = useMemo(() => data.items.diagrams.filter((d) => isFlowKind(d.kind)), [data]);
-  const diagramOptions = mode === "flow" ? flowDiagrams : data.items.diagrams;
+  const match = modeMatch(mode);
+  const modeDiagrams = useMemo(
+    () => (match ? data.items.diagrams.filter((d) => match(d.kind)) : data.items.diagrams),
+    [data, mode],
+  );
+  const diagramOptions = modeDiagrams;
   const contentRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState(() =>
-    mode === "flow" ? (data.items.diagrams.find((d) => isFlowKind(d.kind))?.path ?? "") : "__project__",
+    match ? (data.items.diagrams.find((d) => match(d.kind))?.path ?? "") : "__project__",
   );
   const [showAllDocs, setShowAllDocs] = useState(false);
   // At scale, the auto project map collapses docs into folder super-nodes by
@@ -82,13 +91,13 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
   const [showStale, setShowStale] = useState(false);
   const navigate = useNavigate();
 
-  // In flow mode, latch onto the first flow diagram once one exists (e.g. after the
-  // agent authors it and live-reload delivers it).
+  // In a scoped view, latch onto the first matching diagram once one exists (e.g.
+  // after the agent authors it and live-reload delivers it).
   useEffect(() => {
-    if (mode === "flow" && (selected === "" || selected === "__project__") && flowDiagrams[0]) {
-      setSelected(flowDiagrams[0].path);
+    if (match && (selected === "" || selected === "__project__") && modeDiagrams[0]) {
+      setSelected(modeDiagrams[0].path);
     }
-  }, [mode, flowDiagrams, selected]);
+  }, [mode, modeDiagrams, selected]);
 
   const auto = useMemo(() => buildProjectMap(data, showAllDocs, aggregate), [data, showAllDocs, aggregate]);
   const hiddenDocs = data.items.docs.length - auto.nodes.filter((n) => n.kind === "doc").length;
@@ -160,11 +169,15 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
       return next;
     });
 
-  if (mode === "flow" && flowDiagrams.length === 0) {
+  if (match && modeDiagrams.length === 0) {
+    const isFlow = mode === "flow";
+    const title = isFlow ? "아직 User Flow 다이어그램이 없습니다." : "아직 Tree 다이어그램이 없습니다.";
+    const kindLiteral = isFlow ? '"kind": "flow"' : '"kind": "tree"';
+    const kinds = isFlow ? "start · page · action · decision · end" : "project · requirement · feature · detail";
     return (
       <div className="grid h-full place-items-center p-8 text-center">
         <div className="max-w-md">
-          <p className="text-sm font-medium text-[var(--text)]">아직 User Flow 다이어그램이 없습니다.</p>
+          <p className="text-sm font-medium text-[var(--text)]">{title}</p>
           <p className="mt-2 text-xs leading-relaxed text-[var(--text-faint)]">
             에이전트가{" "}
             <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
@@ -172,9 +185,9 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
             </code>{" "}
             을{" "}
             <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
-              "kind": "flow"
+              {kindLiteral}
             </code>{" "}
-            로 작성하면 자동 정렬되어 여기에 렌더됩니다. 노드 <code className="font-mono">kind</code>는 start · page · action · decision · end.
+            로 작성하면 자동 정렬되어 여기에 렌더됩니다. 노드 <code className="font-mono">kind</code>는 {kinds}.
           </p>
         </div>
       </div>
@@ -192,7 +205,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
           }}
           className="rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-sm text-[var(--text)]"
         >
-          {mode !== "flow" && <option value="__project__">Project map (auto)</option>}
+          {mode === "map" && <option value="__project__">Project map (auto)</option>}
           {diagramOptions.map((d) => (
             <option key={d.path} value={d.path}>
               {d.title} · {d.kind}

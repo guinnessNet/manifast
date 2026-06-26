@@ -263,7 +263,8 @@ Rules of thumb:
   `examples/.manifast/diagrams/user-flow.json`.
 - **Feature tree** (`kind: "tree"`) — model `project → requirement → feature → detail` as
   parent→child edges; tag nodes with those kinds for per-level color, and put the 1–3 line intent
-  in `node.description`. Renders top-down in the Map view.
+  in `node.description`. Renders top-down in the dedicated **Tree** tab. See
+  `examples/.manifast/diagrams/feature-tree.json`.
 
 - Analyze the real project (folders, modules, imports/deps, entry points — and the
   root `CLAUDE.md` / `AGENTS.md` / `README.md`, which Manifast now also shows) and

@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 
-export type View = "wireframes" | "docs" | "tasks" | "plan" | "flow" | "map";
+export type View = "wireframes" | "docs" | "tasks" | "plan" | "flow" | "tree" | "map";
 
 export type NavTarget =
   | { kind: "wireframe"; id: string }
