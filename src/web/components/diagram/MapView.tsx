@@ -1,19 +1,22 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkspaceDTO } from "@shared/types";
 import type { DiagramRef } from "@shared/schema/diagram";
 import { useFile } from "../../hooks/useFile";
 import { Canvas } from "../wireframe/Canvas";
 import { ErrorBanner } from "../ErrorBanner";
+import { MapExportMenu } from "../ExportMenu";
 import { buildProjectMap, getOrphanDocs, getNeighborhood, filterDiagram } from "../../lib/graph";
-import { layoutDiagram, type Layout } from "../../lib/layout";
+import { layoutDiagram, isFlowKind, type Layout } from "../../lib/layout";
 import { smoothPath } from "../../lib/smoothPath";
 import { useNavigate, type NavTarget } from "../../lib/nav";
 import { cn } from "../../lib/cn";
 
 // "manifast item" nodes read as accent-tinted clickable chips; structural nodes
-// stay neutral with a per-kind left-border hue. external = dashed.
+// stay neutral with a per-kind left-border hue. external = dashed. Flow / tree
+// kinds get a full "typed" treatment (filled tint + colored border, see below).
 const MANIFAST_KINDS = new Set(["doc", "wireframe", "task"]);
 const KIND_HUE: Record<string, string> = {
+  // architecture maps — subtle per-kind left-border hue
   module: "#3b82f6",
   service: "#8b5cf6",
   layer: "#14b8a6",
@@ -21,7 +24,30 @@ const KIND_HUE: Record<string, string> = {
   phase: "#f59e0b",
   external: "#94a3b8",
   folder: "#0ea5e9",
+  // user-flow nodes
+  start: "#22c55e",
+  end: "#f43f5e",
+  terminator: "#f43f5e",
+  page: "#3b82f6",
+  screen: "#3b82f6",
+  action: "#f59e0b",
+  decision: "#8b5cf6",
+  // feature-tree nodes
+  project: "#6366f1",
+  requirement: "#0ea5e9",
+  req: "#0ea5e9",
+  feature: "#14b8a6",
+  detail: "#94a3b8",
 };
+// Flow / tree kinds render filled (tinted bg + colored border) so a user flow or
+// feature tree reads as typed nodes, not uniform boxes. Structural kinds (module,
+// service, …) keep the lighter left-border look instead.
+const TYPED_KINDS = new Set([
+  "start", "end", "terminator", "page", "screen", "action", "decision",
+  "project", "requirement", "req", "feature", "detail",
+]);
+// Terminators render as stadium/pills; everything else stays a rounded rect.
+const PILL_KINDS = new Set(["start", "end", "terminator"]);
 
 function refToTarget(ref: DiagramRef): NavTarget | null {
   if (ref.kind === "wireframe") return { kind: "wireframe", id: ref.id };
@@ -33,10 +59,17 @@ function refToTarget(ref: DiagramRef): NavTarget | null {
 export interface MapViewProps {
   data: WorkspaceDTO;
   tick: number;
+  /** "flow" scopes the view to user-flow diagrams (powers the dedicated Flow tab). */
+  mode?: "map" | "flow";
 }
 
-export function MapView({ data, tick }: MapViewProps) {
-  const [selected, setSelected] = useState("__project__");
+export function MapView({ data, tick, mode = "map" }: MapViewProps) {
+  const flowDiagrams = useMemo(() => data.items.diagrams.filter((d) => isFlowKind(d.kind)), [data]);
+  const diagramOptions = mode === "flow" ? flowDiagrams : data.items.diagrams;
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [selected, setSelected] = useState(() =>
+    mode === "flow" ? (data.items.diagrams.find((d) => isFlowKind(d.kind))?.path ?? "") : "__project__",
+  );
   const [showAllDocs, setShowAllDocs] = useState(false);
   // At scale, the auto project map collapses docs into folder super-nodes by
   // default so it reads as structure instead of a 150-node hairball.
@@ -49,9 +82,18 @@ export function MapView({ data, tick }: MapViewProps) {
   const [showStale, setShowStale] = useState(false);
   const navigate = useNavigate();
 
+  // In flow mode, latch onto the first flow diagram once one exists (e.g. after the
+  // agent authors it and live-reload delivers it).
+  useEffect(() => {
+    if (mode === "flow" && (selected === "" || selected === "__project__") && flowDiagrams[0]) {
+      setSelected(flowDiagrams[0].path);
+    }
+  }, [mode, flowDiagrams, selected]);
+
   const auto = useMemo(() => buildProjectMap(data, showAllDocs, aggregate), [data, showAllDocs, aggregate]);
   const hiddenDocs = data.items.docs.length - auto.nodes.filter((n) => n.kind === "doc").length;
   const selMeta = data.items.diagrams.find((d) => d.path === selected);
+  const exportName = selected === "__project__" ? "project-map" : selMeta?.title ?? "diagram";
   const { file } = useFile(selected === "__project__" ? undefined : selected, tick);
 
   const base = selected === "__project__" ? auto : file && file.kind === "diagram" ? file.data : null;
@@ -118,6 +160,27 @@ export function MapView({ data, tick }: MapViewProps) {
       return next;
     });
 
+  if (mode === "flow" && flowDiagrams.length === 0) {
+    return (
+      <div className="grid h-full place-items-center p-8 text-center">
+        <div className="max-w-md">
+          <p className="text-sm font-medium text-[var(--text)]">아직 User Flow 다이어그램이 없습니다.</p>
+          <p className="mt-2 text-xs leading-relaxed text-[var(--text-faint)]">
+            에이전트가{" "}
+            <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
+              .manifast/diagrams/&lt;id&gt;.json
+            </code>{" "}
+            을{" "}
+            <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
+              "kind": "flow"
+            </code>{" "}
+            로 작성하면 자동 정렬되어 여기에 렌더됩니다. 노드 <code className="font-mono">kind</code>는 start · page · action · decision · end.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-[var(--border)] bg-[var(--bg-elevated)] px-4 py-2">
@@ -129,8 +192,8 @@ export function MapView({ data, tick }: MapViewProps) {
           }}
           className="rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)] px-2.5 py-1.5 text-sm text-[var(--text)]"
         >
-          <option value="__project__">Project map (auto)</option>
-          {data.items.diagrams.map((d) => (
+          {mode !== "flow" && <option value="__project__">Project map (auto)</option>}
+          {diagramOptions.map((d) => (
             <option key={d.path} value={d.path}>
               {d.title} · {d.kind}
             </option>
@@ -221,6 +284,16 @@ export function MapView({ data, tick }: MapViewProps) {
             검토 필요 {staleDocs.length}개
           </button>
         )}
+
+        {layout && layout.nodes.length > 0 && (
+          <div className="ml-auto">
+            <MapExportMenu
+              contentRef={contentRef}
+              name={exportName}
+              path={selected !== "__project__" && selected !== "" ? selected : undefined}
+            />
+          </div>
+        )}
       </div>
 
       <div className="relative min-h-0 flex-1">
@@ -232,7 +305,7 @@ export function MapView({ data, tick }: MapViewProps) {
           <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">표시할 노드가 없습니다.</div>
         ) : (
           <Canvas contentW={layout.width} contentH={layout.height} fitKey={`${selected}:${focusId ?? ""}:${depth}`}>
-            <div style={{ position: "relative", width: layout.width, height: layout.height }}>
+            <div ref={contentRef} style={{ position: "relative", width: layout.width, height: layout.height }}>
               {/* groups behind */}
               {layout.groups.map((grp) => (
                 <div
@@ -278,10 +351,12 @@ export function MapView({ data, tick }: MapViewProps) {
 
               {/* nodes */}
               {layout.nodes.map((n) => {
-                const kind = n.node.kind ?? "";
+                const kind = (n.node.kind ?? "").toLowerCase();
                 const isManifast = MANIFAST_KINDS.has(kind);
                 const isExternal = kind === "external";
                 const hue = KIND_HUE[kind];
+                const typed = !!hue && TYPED_KINDS.has(kind);
+                const pill = PILL_KINDS.has(kind);
                 const target = n.node.ref ? resolveRef(n.node.ref) : null;
                 const did = refDocId(n.node.ref);
                 const stale = !!did && staleDocIds.has(did);
@@ -300,18 +375,24 @@ export function MapView({ data, tick }: MapViewProps) {
                       top: n.y,
                       width: n.w,
                       height: n.h,
-                      background: isManifast ? "var(--accent-subtle)" : "var(--bg-elevated)",
+                      background: isManifast
+                        ? "var(--accent-subtle)"
+                        : typed
+                          ? `${hue}${pill ? "30" : "1f"}`
+                          : "var(--bg-elevated)",
                       border: stale
                         ? "1px solid var(--warn)"
                         : isManifast
                           ? "1px solid var(--accent-border)"
                           : isExternal
                             ? `1.5px dashed ${hue ?? "var(--border)"}`
-                            : "1px solid var(--border)",
+                            : typed
+                              ? `1.5px solid ${hue}`
+                              : "1px solid var(--border)",
                       borderLeft:
-                        !stale && !isManifast && !isExternal && hue ? `3px solid ${hue}` : undefined,
+                        !stale && !isManifast && !isExternal && !typed && hue ? `3px solid ${hue}` : undefined,
                       color: isManifast ? "var(--accent)" : "var(--text)",
-                      borderRadius: 11,
+                      borderRadius: pill ? 999 : 11,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",

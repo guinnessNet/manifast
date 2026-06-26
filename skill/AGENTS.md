@@ -226,6 +226,13 @@ clickable + freshness-aware: prefer `{kind:"doc", id}` for a tracked doc (or
 clicks and shows staleness. Don't leave half the nodes edgeless — add relates/supersedes
 edges or rely on groups. Manifast also shows an auto project map (links) with no file needed.
 
+Pick `kind`/`layout` to match the shape: `flow`/`userflow` → directional **user flow** (its own
+**User Flow** tab) with typed nodes `start|end` (pills) · `page` (add `ref:{kind:"wireframe",id}`) ·
+`action` · `decision`, and **labelled** edges (`"예"`/`"아니오"`); `tree`/`sitemap` → top-down
+**feature tree** (`project|requirement|feature|detail` parent→child edges, intent in
+`description`); `docmap`/`mindmap` → radial mind map; else → layered architecture. See
+`examples/.manifast/diagrams/user-flow.json`.
+
 ## 6. Links (single source of truth — no duplication)
 
 | link | where it lives |

@@ -241,8 +241,9 @@ The app renders three strategies; set `layout` explicitly, or let it be inferred
 | content shape | `layout` | `kind` that infers it | looks like |
 |---|---|---|---|
 | **document/feature relationships** (many-to-many cross-refs) | `radial` | `docmap` · `mindmap` · `relations` | **mind map** — a hub at center, related nodes on rings outward |
-| **sitemap / nav / doc taxonomy** (single-parent hierarchy) | `tree` | `sitemap` · `tree` · `hierarchy` | top-down tidy tree |
-| **backend / architecture / dataflow** (directional tiers) | `layered` | `architecture` · `flow` · everything else | dagre lanes, `groups` as tiers, follows `direction` |
+| **sitemap / feature tree** (single-parent hierarchy) | `tree` | `sitemap` · `tree` · `hierarchy` | top-down tidy tree (use feature-tree node kinds, below) |
+| **user flow / screen flow** (start → page → action → decision) | `layered` | `flow` · `userflow` | a **flow**: typed nodes + arrowed, labelled edges. Gets its own **User Flow** tab |
+| **backend / architecture / dataflow** (directional tiers) | `layered` | `architecture` · everything else | dagre lanes, `groups` as tiers, follows `direction` |
 
 Rules of thumb:
 - **Relationships → `radial`, NOT layered.** A doc/concept map forced through layered dagre
@@ -254,10 +255,23 @@ Rules of thumb:
 - **Keep a hand-authored diagram focused (≤ ~25 nodes).** Big graphs are for the auto map, which
   aggregates (below). If you need more, split into several diagrams or use groups as tiers.
 
+- **User flow** (`kind: "flow"`) — model a screen/process flow as directed, **labelled** edges
+  (`label: "로그인 클릭"`, `"예"`, `"아니오"`). Give nodes a typed `kind` so they render distinctly:
+  `start` / `end` (green/red **pills**), `page` (a screen — add `ref: { kind: "wireframe", id }`
+  so it clicks through), `action` (a user action), `decision` (a branch). Set `direction` (`TB`
+  top-down or `LR` left-right). These appear in the dedicated **User Flow** tab. See
+  `examples/.manifast/diagrams/user-flow.json`.
+- **Feature tree** (`kind: "tree"`) — model `project → requirement → feature → detail` as
+  parent→child edges; tag nodes with those kinds for per-level color, and put the 1–3 line intent
+  in `node.description`. Renders top-down in the Map view.
+
 - Analyze the real project (folders, modules, imports/deps, entry points — and the
   root `CLAUDE.md` / `AGENTS.md` / `README.md`, which Manifast now also shows) and
   emit nodes + edges. Don't compute positions; the app handles layout.
-- `node.kind` (module|service|layer|db|external|doc|folder|…) just tints the box; `edge.kind`는
+- `node.kind` gives a node its visual: architecture `module|service|layer|db|external|folder`
+  (subtle left-border hue); user-flow `start|page|action|decision|end` and feature-tree
+  `project|requirement|feature|detail` render as typed filled nodes (terminators as pills);
+  anything else is a neutral box. `edge.kind`는
   자유 형식이지만 **아래 권장 어휘를 우선 사용**하고 맞는 게 없으면 `other`를 쓴다:
   `implements` · `supersedes` · `references` · `plans-for` · `results` · `includes` ·
   `uses` · `produces` · `rollup` · `absorbed-by` · `next` · `sibling`.

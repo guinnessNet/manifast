@@ -52,7 +52,14 @@ export function resolveLayout(d: DiagramFile): LayoutStrategy {
   const k = (d.kind ?? "").toLowerCase();
   if (k === "docmap" || k === "mindmap" || k === "relations" || k === "concept") return "radial";
   if (k === "sitemap" || k === "tree" || k === "hierarchy") return "tree";
+  // flow / userflow are directional — the default layered dagre is exactly right.
   return "layered";
+}
+
+/** Diagram kinds that read as a user-flow (typed nodes + directional, labelled edges). */
+const FLOW_KINDS = new Set(["flow", "userflow", "user-flow", "flowchart"]);
+export function isFlowKind(kind?: string): boolean {
+  return FLOW_KINDS.has((kind ?? "").toLowerCase());
 }
 
 export function layoutDiagram(d: DiagramFile): Layout {

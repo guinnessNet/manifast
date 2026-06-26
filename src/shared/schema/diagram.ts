@@ -13,7 +13,11 @@ export const DiagramNodeSchema = z.object({
   id: z.string(),
   label: z.string(),
   group: z.string().optional(), // group/cluster id
-  kind: z.string().optional(), // e.g. module|service|layer|db|external|doc|wireframe|task
+  // free-form, but the app gives these conventional kinds a typed visual:
+  //   architecture: module|service|layer|db|external|folder
+  //   user-flow:    start|page|action|decision|end
+  //   feature-tree: project|requirement|feature|detail
+  kind: z.string().optional(),
   description: z.string().optional(),
   ref: DiagramRefSchema.optional(), // clickable link to a manifast item
 });
