@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup, screen as rtl, waitFor } from "@testing-library/react";
+import { render, cleanup, screen as rtl, waitFor, fireEvent } from "@testing-library/react";
 import type { ReactElement } from "react";
 import { ScreenRenderer } from "../src/web/components/wireframe/Renderer";
 import { Board } from "../src/web/components/tasks/Board";
@@ -17,6 +17,7 @@ import { workspace, doc } from "./helpers";
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  localStorage.clear(); // reset persisted doc-tree collapse state between tests
 });
 
 /** Render inside the themed #mf-root wrapper (so dark-mode tokens apply). */
@@ -125,6 +126,47 @@ describe("MapView", () => {
     const ws = workspace({ docs: [doc({ id: "a", related: ["b"] }), doc({ id: "b", title: "Beta doc" })] });
     renderThemed(<MapView data={ws} tick={0} />);
     expect(rtl.getAllByText("Beta doc").length).toBeGreaterThan(0);
+  });
+});
+
+describe("DocRail folder tree", () => {
+  const docs = [
+    doc({ id: "a", path: "docs/specs/claim/CLAIM_BUILD_V1.md", title: "Claim build" }),
+    doc({ id: "b", path: "docs/specs/claim/CLAIM_AUDIT_V1.md", title: "Claim audit" }),
+    doc({ id: "c", path: "docs/specs/ENVELOPE_V1.md", title: "Envelope" }),
+    doc({ id: "r", path: "README.md", title: "Readme" }),
+  ];
+  const ws = workspace({ docs });
+
+  // path is undefined → useFile makes no request, so the rail renders fetch-free.
+  const renderRail = () => renderThemed(<DocView docs={docs} onSelect={() => {}} graph={buildLinkGraph(ws)} tick={0} />);
+
+  it("nests docs into collapsible folders with recursive count badges", () => {
+    renderRail();
+    const claim = rtl.getByRole("button", { name: /^claim 폴더/ });
+    expect(claim).toHaveAttribute("aria-expanded", "true");
+    expect(claim.getAttribute("aria-label")).toMatch(/문서 2개/); // claim holds a + b
+    expect(rtl.getByText("Claim build")).toBeInTheDocument();
+    expect(rtl.getByText("Readme")).toBeInTheDocument(); // root-level file at top level
+  });
+
+  it("collapsing a folder hides its descendants", () => {
+    renderRail();
+    expect(rtl.getByText("Claim build")).toBeInTheDocument();
+    fireEvent.click(rtl.getByRole("button", { name: /^docs 폴더/ }));
+    expect(rtl.queryByText("Claim build")).not.toBeInTheDocument();
+    expect(rtl.queryByRole("button", { name: /^claim 폴더/ })).not.toBeInTheDocument();
+  });
+
+  it("search auto-expands folders containing matches", () => {
+    renderRail();
+    fireEvent.click(rtl.getByRole("button", { name: "모두 접기" })); // collapse everything
+    expect(rtl.queryByText("Claim build")).not.toBeInTheDocument();
+    fireEvent.change(rtl.getByPlaceholderText(/^Search docs…/), { target: { value: "claim build" } });
+    expect(rtl.getByText("Claim build")).toBeInTheDocument(); // surfaced despite being collapsed
+    // During search folders are static headers (no toggle button) so a click
+    // can't silently mutate the persisted collapse state behind the auto-expand.
+    expect(rtl.queryByRole("button", { name: /폴더/ })).toBeNull();
   });
 });
 

@@ -3,6 +3,27 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
+## 1.1.0 — collapsible docs folder tree (2026-06-26)
+
+- **The Docs sidebar is now a collapsible folder tree.** The flat, full-path
+  group headers are replaced by a nested folder hierarchy (like VS Code): each
+  folder collapses/expands via a chevron (click · Enter · Space), carries a
+  **recursive doc-count badge** (e.g. `claim 15`), and **모두 접기 / 모두 펼치기**
+  collapse/expand the whole tree at once. Folders sort before files; the
+  agent-authored `.manifast/prd` + `.manifast/specs` keep their PRD/Specs labels.
+- **State persists.** Collapse/expand state is saved to `localStorage`
+  (`mf-docs-collapsed`) so it survives a full refresh **and** live reload; the
+  stored set self-prunes paths for folders that were renamed/deleted.
+- **Search auto-expands.** Typing in the doc filter force-expands every folder
+  containing a match; while searching, folder rows render as static headers so
+  the auto-expand can't be silently toggled away behind the user's back.
+- **Accessibility.** Folder toggles are real `<button>`s with `aria-expanded`, an
+  `aria-label`, and a visible focus ring; count badges + collapse controls use the
+  AA-contrast `--text-muted` token.
+- Internals: a new pure `src/web/lib/docTree.ts` (`buildDocTree` / `allFolderPaths`
+  / `folderLabel`) with unit tests + DocRail render tests. The Map view's separate
+  “폴더로 집계” aggregation is unchanged — this is the **sidebar** tree.
+
 ## 1.0.1 — doc readability (2026-06-26)
 
 - **Markdown body contrast:** `.mf-prose` body text now uses the full-strength
