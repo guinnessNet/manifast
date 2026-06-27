@@ -13,7 +13,9 @@ exports the files an external agent authors in a project's `.manifast/` folder
 AI** (the agent analyzes; the app only renders).
 
 - **User-facing docs:** `README.md`
-- **Authoritative spec (v1) + change appendices:** `docs/DESIGN.md` (부록 B = v2 docs, 부록 C = v3 diagrams)
+- **Authoritative spec:** `docs/DESIGN.md` (index) → `docs/design/v1-spec.md` (v1 core),
+  `docs/design/appendix-b-v2-docs.md` (v2 docs), `appendix-c-v3-diagrams.md` (v3 diagrams),
+  `appendix-d-v4-governance.md` (v4 governance). Verbatim original at `docs/archive/raw/DESIGN.md`.
 - **Version history:** `CHANGELOG.md`
 - **Original one-shot build prompt (historical):** `docs/GOAL_PROMPT.md`
 

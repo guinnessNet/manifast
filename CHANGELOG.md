@@ -3,6 +3,17 @@
 All notable changes to Manifast. (Local package; not published to npm — install
 globally with `npm install -g .` after bumping the version.)
 
+## Unreleased
+
+**Skill — Mode A: raw-preserve + huge-doc chunking + provenance.** The structuring
+playbook (`SKILL.md` / `AGENTS.md`, step 5) now covers splitting oversized/multi-topic
+docs into focused Diátaxis pieces while **preserving the verbatim original under
+`docs/archive/raw/`** (auto-archived) and wiring each piece back to the raw + siblings
+via `sources` + `related` (so nothing — including the raw — is orphaned). Bodies are
+sliced verbatim (no rewriting); the old path becomes a short index. No schema/app
+change — uses existing fields and the `docs/archive/` auto-archive behavior. Piloted on
+this repo's own `docs/DESIGN.md`.
+
 ## 1.2.15
 
 **Fewer false orphan docs — doc↔doc relationships.** The Map flagged docs as
