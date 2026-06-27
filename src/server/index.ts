@@ -14,6 +14,7 @@ import {
 } from "./workspace";
 import { createWatcher } from "./watcher";
 import { adoptDoc, setDocStatus, setDocReview } from "./edit";
+import { confine } from "./safePath";
 import type { WsMessage } from "../shared/types";
 
 export interface ServerOptions {
@@ -60,11 +61,19 @@ const CONTENT_TYPES: Record<string, string> = {
   ".md": "text/markdown; charset=utf-8",
 };
 
-function resolveSafe(root: string, rel: string): string | null {
-  const target = path.resolve(root, rel);
-  const rootWithSep = path.resolve(root) + path.sep;
-  if (target !== path.resolve(root) && !target.startsWith(rootWithSep)) return null;
-  return target;
+/**
+ * Reject browser requests from a non-local Origin (DNS-rebinding / CSRF defense
+ * for this localhost-only tool). Non-browser clients (curl, the SSR check) send
+ * no Origin and are allowed.
+ */
+function isLocalOrigin(origin: string | undefined): boolean {
+  if (!origin) return true;
+  try {
+    const host = new URL(origin).hostname.replace(/^\[|\]$/g, "");
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch {
+    return false;
+  }
 }
 
 export interface BuiltApp {
@@ -83,6 +92,13 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
   await app.register(fastifyWebsocket);
 
   const sockets = new Set<WsClient>();
+
+  // Reject state-changing requests carrying a non-local browser Origin.
+  app.addHook("onRequest", async (req, reply) => {
+    if (req.method === "POST" && !isLocalOrigin(req.headers.origin)) {
+      return reply.code(403).send({ ok: false, error: "cross-origin 요청 거부됨" });
+    }
+  });
 
   // --- REST ---------------------------------------------------------------
   app.get("/api/workspace", async () => readWorkspace(opts.manifastDir, opts.projectDir));
@@ -142,7 +158,7 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
       reply.code(400);
       return reply.send("path required");
     }
-    const abs = resolveSafe(opts.projectDir, q.path);
+    const abs = confine(opts.projectDir, q.path);
     if (!abs) {
       reply.code(400);
       return reply.send("invalid path");
@@ -160,7 +176,13 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
 
   // --- WebSocket ----------------------------------------------------------
   await app.register(async (f) => {
-    f.get("/ws", { websocket: true }, (socket) => {
+    f.get("/ws", { websocket: true }, (socket, req) => {
+      // A malicious page could open this socket and observe file-change paths;
+      // gate it to local Origins (non-browser clients send none).
+      if (!isLocalOrigin(req.headers.origin)) {
+        (socket.terminate ?? socket.close)?.call(socket);
+        return;
+      }
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
       socket.on("error", () => sockets.delete(socket));

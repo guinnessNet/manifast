@@ -3,6 +3,7 @@ import type { Stats } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
+import { confine } from "./safePath";
 import {
   WireframeSchema,
   TasksFileSchema,
@@ -551,9 +552,9 @@ export async function readWorkspace(manifastDir: string, projectDir: string): Pr
 // --- Public: single file (full content) -----------------------------------
 
 function resolveSafe(projectDir: string, relPath: string): string | null {
-  const target = path.resolve(projectDir, relPath);
-  if (!within(projectDir, target)) return null;
-  return target;
+  // `confine` resolves symlinks so a link inside the workspace can't read
+  // outside it (a plain prefix check on path.resolve() would miss that).
+  return confine(projectDir, relPath);
 }
 
 export async function readFileResource(projectDir: string, relPath: string): Promise<FileResponse> {

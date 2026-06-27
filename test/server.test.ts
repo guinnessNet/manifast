@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import path from "node:path";
-import { readFile } from "node:fs/promises";
+import { readFile, writeFile, symlink, rm } from "node:fs/promises";
 import matter from "gray-matter";
 import { buildApp, type BuiltApp } from "../src/server/index";
 import { makeTempProject, writeFixture } from "./helpers";
@@ -118,6 +118,47 @@ describe("path traversal (P0 security)", () => {
     const outside = path.resolve(dir, "..", "outside.md");
     const res = await built.app.inject({ method: "GET", url: `/api/raw?path=${encodeURIComponent(outside)}` });
     expect([400, 404]).toContain(res.statusCode);
+  });
+
+  it("does not follow a symlink that escapes the root", async () => {
+    const secret = path.resolve(dir, "..", "mf-symlink-secret.md");
+    await writeFile(secret, "TOP SECRET");
+    const link = path.join(dir, "docs", "leak.md");
+    try {
+      await symlink(secret, link);
+    } catch {
+      // Platform without symlink permission (e.g. Windows w/o Developer Mode);
+      // the realpath confinement still applies, just can't be exercised here.
+      await rm(secret, { force: true });
+      return;
+    }
+    const res = await built.app.inject({ method: "GET", url: "/api/raw?path=docs/leak.md" });
+    expect([400, 404]).toContain(res.statusCode);
+    expect(res.body).not.toContain("TOP SECRET");
+    await rm(secret, { force: true });
+    await rm(link, { force: true });
+  });
+});
+
+describe("origin gate (CSRF / DNS-rebinding defense)", () => {
+  it("rejects a POST carrying a non-local Origin", async () => {
+    const res = await built.app.inject({
+      method: "POST",
+      url: "/api/doc/adopt",
+      headers: { origin: "http://evil.example" },
+      payload: { path: "docs/guide.md" },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("allows a POST from a localhost Origin", async () => {
+    const res = await built.app.inject({
+      method: "POST",
+      url: "/api/doc/status",
+      headers: { origin: "http://localhost:5173" },
+      payload: { path: "docs/guide.md", status: "draft" },
+    });
+    expect(res.json().ok).toBe(true);
   });
 });
 
