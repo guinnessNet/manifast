@@ -3,7 +3,6 @@ import { LayoutGrid, FileText, Link2 } from "lucide-react";
 import type { TasksData } from "@shared/types";
 import type { Task, TaskStatus, TaskPriority } from "@shared/schema/tasks";
 import type { LinkGraph } from "../../lib/links";
-import { Badge } from "../ui/badge";
 import { ErrorBanner } from "../ErrorBanner";
 import { LinkChip } from "../LinkChip";
 import { cn } from "../../lib/cn";

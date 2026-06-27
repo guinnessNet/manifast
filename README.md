@@ -11,20 +11,21 @@ JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
 **light/dark themes** + accent colors, and **export** to PNG/SVG/HTML/JSON/
 Markdown/ZIP. Fully local, personal, no accounts, no database, no AI calls.
 
-The app never writes your files (the only exception is `manifast init`, which
-scaffolds and installs the skill, and never overwrites anything). The single
-source of truth is the `.manifast/` folder; the server just reads, validates,
-and serves it.
+The app never writes your files, with two scoped exceptions: `manifast init`
+(scaffolds and installs the skill, never overwriting anything) and the
+[Document management](#document-management-v2) feature, which writes **only doc
+frontmatter** (`uid` + status/metadata, never the body). The single source of
+truth is the `.manifast/` folder; the server just reads, validates, and serves it.
 
 ## Screenshots
 
-![Wireframe canvas](docs/screenshots/wireframes.png)
+![Wireframe canvas](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/wireframes.png)
 
 | Docs | Tasks |
 |---|---|
-| ![Docs](docs/screenshots/docs.png) | ![Tasks board](docs/screenshots/tasks.png) |
+| ![Docs](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/docs.png) | ![Tasks board](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/tasks.png) |
 | **Plan** | **Map** |
-| ![Roadmap](docs/screenshots/plan.png) | ![Relationship map](docs/screenshots/map.png) |
+| ![Roadmap](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/plan.png) | ![Relationship map](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/map.png) |
 
 ---
 

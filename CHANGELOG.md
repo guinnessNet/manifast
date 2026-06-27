@@ -58,7 +58,7 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 
 ## 1.0.0 — first public release (2026-06-26)
 
-The first npm-ready release. Pre-publish hardening on top of the internal 1.2.x
+The first npm-ready release. Pre-publish hardening on top of the 1.2.x
 line (see the note below the 1.2.x entries); no user-facing behavior change versus
 1.2.15 — this is the trust/packaging milestone, not a feature drop.
 
@@ -83,7 +83,7 @@ line (see the note below the 1.2.x entries); no user-facing behavior change vers
   cross-platform teardown.
 - **CI (GitHub Actions):** matrix Node 20/22 × ubuntu/windows → typecheck →
   schema-drift guard → test → build → SSR check → `npm pack --dry-run`; a separate
-  Linux e2e job; and a tag-gated `npm publish --provenance` job (runs `prepublishOnly`).
+  Linux e2e job; and a tag-gated `npm publish --access public` job (runs `prepublishOnly`).
 - **`.gitattributes`** pins LF so the schema-drift `git diff` guard is deterministic
   across OSes.
 - **Perf smoke:** a test parses 300+ docs incl. a ~200KB one and re-reads from the
@@ -141,9 +141,8 @@ sockets (+ Fastify `forceCloseConnections`), and the CLI has a 2s force-exit fal
 Ctrl+C exits immediately).
 
 > **Note on the 1.2.1 → 1.2.12 jump:** versions 1.2.2–1.2.11 were local,
-> unreleased iterations (no global install, no tag) whose changes were folded into
-> the 1.2.12+ entries above. The history is intentionally continuous from 1.2.12
-> onward now that the project is being prepared for publication.
+> unreleased iterations whose changes were folded into the 1.2.12+ entries above.
+> The history is intentionally continuous from 1.2.12 onward.
 
 ## 1.2.1
 
