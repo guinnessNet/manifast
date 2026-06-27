@@ -2,7 +2,7 @@
 
 **A local, read-only visualizer for AI-authored wireframes and dev docs.**
 
-> v1.0.0 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
+> v1.2.0 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
 JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
@@ -35,17 +35,22 @@ and serves it.
 
 ## Install
 
-Manifast isn't published to npm — install the CLI **globally from this folder**:
+Install the CLI globally from npm:
 
 ```bash
-npm install        # dependencies
-npm run build      # build the SPA (dist/web) + CLI (dist/cli)
-npm install -g .   # put the `manifast` command on your PATH
+npm install -g manifast   # put the `manifast` command on your PATH
+manifast --version
 ```
 
-To update after changing the source, bump `version` in `package.json`, then re-run
-`npm run build && npm install -g .` — installing the **same** version reports "up
-to date" and won't refresh.
+Or run it without installing:
+
+```bash
+npx manifast
+```
+
+> **Building from source?** See [CLAUDE.md](CLAUDE.md) — clone, `npm install`,
+> `npm run build`, then `npm install -g .` (bump `version` first; the **same**
+> version reports "up to date" and won't refresh).
 
 ## Quick start
 

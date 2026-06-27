@@ -1,7 +1,8 @@
 # Changelog
 
-All notable changes to Manifast. (Local package; not published to npm — install
-globally with `npm install -g .` after bumping the version.)
+All notable changes to Manifast. Published on npm as
+[`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
+Building from source? Bump the version, then `npm run build && npm install -g .`.
 
 ## 1.2.0 — user-flow & feature-tree views (2026-06-26)
 
