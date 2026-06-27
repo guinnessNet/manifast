@@ -7,6 +7,12 @@ product docs, create/modify the files described below. Keep every file a valid
 JSON or Markdown-with-frontmatter document — the viewer shows an error banner for
 anything it can't parse but keeps rendering the rest.
 
+**After authoring or editing, run `npx manifast validate`** (add `--strict` to fail
+on warnings too). It re-checks the whole workspace against these schemas + the
+cross-references (links, ids) and exits non-zero on any error — if it fails, you
+are not done. This is the LLM-agnostic gate: it holds regardless of which agent or
+tool wrote the files.
+
 > If a `.claude/skills/manifast/SKILL.md` exists, it contains the same guidance.
 
 ## 0. 두 작업 모드

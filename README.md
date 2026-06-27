@@ -78,6 +78,7 @@ refreshes in ~300 ms — no full page reload.
 | `manifast` | Start the server for the current folder and open the browser |
 | `manifast <dir>` | Use `<dir>` (or `<dir>/.manifast`) as the workspace |
 | `manifast init [dir]` | Scaffold `.manifast/` + install the skill (never overwrites) |
+| `manifast validate [dir]` | Check the workspace against the schemas + links; exits 1 on errors (`--strict` also fails on warnings) |
 | `manifast --port <n>` | Use a specific port (default 4317; next free port if taken) |
 | `manifast --no-open` | Don't open the browser |
 | `manifast --help` / `--version` | Help / version |

@@ -12,6 +12,10 @@ write product docs, create/modify the files described here. Keep every file a
 shows a red error banner for any file it can't parse, but keeps rendering the
 rest.
 
+**After authoring or editing, run `npx manifast validate`** (`--strict` also fails
+on warnings). It re-checks every file against these schemas plus cross-references
+(links, ids) and exits non-zero on any error — if it fails, you are not done.
+
 ## 0. 두 작업 모드
 
 **모드 A — 기존 문서 구조화** (프로젝트에 `docs/`가 이미 쌓여 있을 때). 흩어진 문서를 읽고
