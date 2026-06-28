@@ -1,6 +1,6 @@
 {
   "name": "manifast",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Local, read-only visualizer + live-reload + export for AI-authored wireframes and dev docs (.manifast/).",
   "type": "module",
   "license": "MIT",

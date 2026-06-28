@@ -4,7 +4,7 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
-## Unreleased
+## 1.2.1 — `manifast validate` + LLM-agnostic guide + security hardening (2026-06-28)
 
 - **New `manifast validate [dir]` command.** Re-parses the workspace through the
   same zod schemas the app uses and checks cross-references (broken
