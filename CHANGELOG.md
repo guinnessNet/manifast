@@ -10,7 +10,8 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
   same zod schemas the app uses and checks cross-references (broken
   spec→wireframe/tasks links, doc `related`/`deprecatedBy`, task
   `specId`/`wireframeId`/`deps`, plan `taskIds`, and diagram edge endpoints /
-  `node.ref` / `node.group`) plus duplicate ids, exiting non-zero on any error
+  `node.ref` — incl. `path` refs pointing at a file that must exist in-root —
+  / `node.group`) plus duplicate ids, exiting non-zero on any error
   (`--strict` also fails on warnings). Each problem is reported once at the right
   level (schema failures = errors, inferrable doc-id clashes / frontmatter
   warnings = warnings). An **LLM-agnostic gate**: any agent can author the files,
@@ -24,7 +25,9 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 - **Security hardening.** File access resolves realpaths so a symlink/junction
   inside the workspace can't escape the project root — both on the read/write
   endpoints (`/api/raw`, `/api/file`, doc writes) and during workspace discovery
-  (so a junctioned source dir can't leak outside metadata). Every request must
+  — including the manifest read and the file-export listing, so even a `.manifast`
+  directory that is itself a junction can't leak an outside project name or file
+  names. Every request must
   carry a local `Host` (DNS-rebinding defense, GET included) and state-changing
   POSTs / `/ws` upgrades a local `Origin` (CSRF). Bumped `@fastify/static` to
   `^9.1.3` (path-traversal advisories).

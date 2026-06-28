@@ -126,4 +126,38 @@ describe("validateWorkspace", () => {
     expect(r.ok).toBe(false);
     expect(r.issues.some((i) => /doc ref "ghost"/.test(i.message))).toBe(true);
   });
+
+  it("flags a diagram node.ref of kind path to a missing file", async () => {
+    await writeFixture(
+      dir,
+      ".manifast/diagrams/d3.json",
+      JSON.stringify({
+        schema: "manifast.diagram/1",
+        id: "d3",
+        title: "D3",
+        nodes: [{ id: "a", label: "A", ref: { kind: "path", id: "docs/missing.md" } }],
+        edges: [],
+      }),
+    );
+    const r = await run();
+    expect(r.ok).toBe(false);
+    expect(r.issues.some((i) => /path ref "docs\/missing.md"/.test(i.message))).toBe(true);
+  });
+
+  it("accepts a diagram node.ref of kind path to an existing file", async () => {
+    await writeFixture(dir, "docs/real.md", "# Real\n");
+    await writeFixture(
+      dir,
+      ".manifast/diagrams/d4.json",
+      JSON.stringify({
+        schema: "manifast.diagram/1",
+        id: "d4",
+        title: "D4",
+        nodes: [{ id: "a", label: "A", ref: { kind: "path", id: "docs/real.md" } }],
+        edges: [],
+      }),
+    );
+    const r = await run();
+    expect(r.issues.filter((i) => i.level === "error")).toEqual([]);
+  });
 });

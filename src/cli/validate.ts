@@ -1,4 +1,6 @@
+import { existsSync } from "node:fs";
 import { readWorkspace, readFileResource } from "../server/workspace";
+import { confine } from "../server/safePath";
 
 // `manifast validate` — an LLM-agnostic gate. Any agent (Claude, Codex, …) can
 // author files; this re-parses the workspace through the same zod schemas the
@@ -93,8 +95,9 @@ export async function validateWorkspace(manifastDir: string, projectDir: string)
   }
 
   // 4. Diagram integrity — edges must connect real nodes, node.group must exist,
-  //    and node.ref must resolve (path refs aren't checked here). The DTO only
-  //    carries diagram counts, so re-read each parsed diagram for its graph.
+  //    and node.ref must resolve (incl. `path` refs, which point at a file that
+  //    must exist inside the project root). The DTO only carries diagram counts,
+  //    so re-read each parsed diagram for its graph.
   for (const dg of ws.items.diagrams) {
     if (!dg.ok) continue;
     const resp = await readFileResource(projectDir, dg.path);
@@ -114,6 +117,10 @@ export async function validateWorkspace(manifastDir: string, projectDir: string)
         if (ref.kind === "wireframe" && !wfIds.has(ref.id)) err(dg.path, `node "${n.id}": wireframe ref "${ref.id}" not found`);
         if (ref.kind === "doc" && !docIds.has(ref.id)) err(dg.path, `node "${n.id}": doc ref "${ref.id}" not found`);
         if (ref.kind === "task" && !taskIds.has(ref.id)) err(dg.path, `node "${n.id}": task ref "${ref.id}" not found`);
+        if (ref.kind === "path") {
+          const abs = confine(projectDir, ref.id);
+          if (!abs || !existsSync(abs)) err(dg.path, `node "${n.id}": path ref "${ref.id}" not found`);
+        }
       }
     }
   }

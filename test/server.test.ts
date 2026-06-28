@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import path from "node:path";
-import { readFile, writeFile, symlink, rm } from "node:fs/promises";
+import { readFile, writeFile, symlink, rm, mkdir } from "node:fs/promises";
 import matter from "gray-matter";
 import { buildApp, type BuiltApp } from "../src/server/index";
+import { readWorkspace, listAllFiles } from "../src/server/workspace";
 import { makeTempProject, writeFixture } from "./helpers";
 
 let dir: string;
@@ -137,6 +138,40 @@ describe("path traversal (P0 security)", () => {
     expect(res.body).not.toContain("TOP SECRET");
     await rm(secret, { force: true });
     await rm(link, { force: true });
+  });
+});
+
+describe("junction confinement (.manifast itself escaping the root)", () => {
+  it("does not leak an external manifest/file list when .manifast is a junction", async () => {
+    // An external dir holding a manifast workspace, outside the project root.
+    const outside = path.resolve(dir, "..", "mf-junction-outside");
+    await mkdir(path.join(outside, "wireframes"), { recursive: true });
+    await writeFile(
+      path.join(outside, "manifast.json"),
+      JSON.stringify({ schema: "manifast/1", project: { name: "SECRET-PROJECT" } }),
+    );
+    await writeFile(path.join(outside, "wireframes", "secret.json"), "{}");
+
+    // Point a fresh project's .manifast at the external dir via a junction.
+    const proj = path.resolve(dir, "..", "mf-junction-proj");
+    await mkdir(proj, { recursive: true });
+    const link = path.join(proj, ".manifast");
+    try {
+      await symlink(outside, link, "junction");
+    } catch {
+      // No symlink/junction permission here — the isConfined guard still applies.
+      await rm(outside, { recursive: true, force: true });
+      await rm(proj, { recursive: true, force: true });
+      return;
+    }
+
+    const ws = await readWorkspace(link, proj);
+    expect(ws.project.name).not.toBe("SECRET-PROJECT");
+    const files = await listAllFiles(link, proj);
+    expect(files.some((f) => f.includes("secret.json"))).toBe(false);
+
+    await rm(outside, { recursive: true, force: true });
+    await rm(proj, { recursive: true, force: true });
   });
 });
 

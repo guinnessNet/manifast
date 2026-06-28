@@ -143,12 +143,17 @@ interface ManifestConfig {
 }
 
 async function readManifest(manifastDir: string, projectDir: string): Promise<ManifestConfig> {
-  const raw = await readText(path.join(manifastDir, "manifast.json"));
-  if (raw != null) {
-    const parsed = parseJson(raw);
-    if (parsed.ok) {
-      const result = ManifestSchema.safeParse(parsed.value);
-      if (result.success) return { project: result.data.project, sources: result.data.sources };
+  const file = path.join(manifastDir, "manifast.json");
+  // If `.manifast` itself is a junction/symlink escaping the root, don't read
+  // (or leak the project name from) an external manifest — fall back to default.
+  if (isConfined(projectDir, file)) {
+    const raw = await readText(file);
+    if (raw != null) {
+      const parsed = parseJson(raw);
+      if (parsed.ok) {
+        const result = ManifestSchema.safeParse(parsed.value);
+        if (result.success) return { project: result.data.project, sources: result.data.sources };
+      }
     }
   }
   return { project: { name: path.basename(projectDir) || "manifast" } };
@@ -635,7 +640,10 @@ export async function listAllFiles(manifastDir: string, projectDir: string): Pro
       if (e.name.startsWith(".")) continue;
       const abs = path.join(dir, e.name);
       if (e.isDirectory()) await walk(abs);
-      else if (e.isFile()) out.push(toPosix(path.relative(projectDir, abs)));
+      // Skip anything that escapes the project root once symlinks/junctions are
+      // resolved, so a `.manifast` (or sub-dir) junction can't leak outside
+      // file names into the export listing.
+      else if (e.isFile() && isConfined(projectDir, abs)) out.push(toPosix(path.relative(projectDir, abs)));
     }
   }
   try {
