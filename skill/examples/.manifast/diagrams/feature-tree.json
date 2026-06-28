@@ -1,0 +1,35 @@
+{
+  "schema": "manifast.diagram/1",
+  "id": "feature-tree",
+  "title": "기능 트리",
+  "kind": "tree",
+  "direction": "TB",
+  "generatedBy": "claude-code",
+  "generatedAt": "2026-06-26",
+  "nodes": [
+    { "id": "app", "label": "Manifast Demo", "kind": "project", "description": "예시 워크스페이스의 기능 계층" },
+
+    { "id": "req-auth", "label": "인증", "kind": "requirement", "description": "사용자가 안전하게 로그인하고 세션을 유지한다." },
+    { "id": "req-dash", "label": "대시보드", "kind": "requirement", "description": "로그인 후 핵심 지표와 활동을 한눈에 본다." },
+
+    { "id": "feat-login", "label": "로그인", "kind": "feature", "description": "이메일/비밀번호로 인증", "ref": { "kind": "wireframe", "id": "screen-login" } },
+    { "id": "feat-reset", "label": "비밀번호 재설정", "kind": "feature", "description": "이메일 링크로 재설정" },
+    { "id": "feat-kpi", "label": "KPI 요약", "kind": "feature", "description": "매출·증감 카드", "ref": { "kind": "wireframe", "id": "screen-dashboard" } },
+    { "id": "feat-table", "label": "활동 테이블", "kind": "feature", "description": "최근 활동 목록" },
+
+    { "id": "d-validate", "label": "자격 증명 검증", "kind": "detail" },
+    { "id": "d-error", "label": "오류 처리", "kind": "detail" },
+    { "id": "d-delta", "label": "전월 대비 증감", "kind": "detail" }
+  ],
+  "edges": [
+    { "from": "app", "to": "req-auth", "kind": "includes" },
+    { "from": "app", "to": "req-dash", "kind": "includes" },
+    { "from": "req-auth", "to": "feat-login", "kind": "includes" },
+    { "from": "req-auth", "to": "feat-reset", "kind": "includes" },
+    { "from": "req-dash", "to": "feat-kpi", "kind": "includes" },
+    { "from": "req-dash", "to": "feat-table", "kind": "includes" },
+    { "from": "feat-login", "to": "d-validate", "kind": "includes" },
+    { "from": "feat-login", "to": "d-error", "kind": "includes" },
+    { "from": "feat-kpi", "to": "d-delta", "kind": "includes" }
+  ]
+}

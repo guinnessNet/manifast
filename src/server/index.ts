@@ -14,6 +14,7 @@ import {
 } from "./workspace";
 import { createWatcher } from "./watcher";
 import { adoptDoc, setDocStatus, setDocReview } from "./edit";
+import { confine } from "./safePath";
 import type { WsMessage } from "../shared/types";
 
 export interface ServerOptions {
@@ -60,18 +61,63 @@ const CONTENT_TYPES: Record<string, string> = {
   ".md": "text/markdown; charset=utf-8",
 };
 
-function resolveSafe(root: string, rel: string): string | null {
-  const target = path.resolve(root, rel);
-  const rootWithSep = path.resolve(root) + path.sep;
-  if (target !== path.resolve(root) && !target.startsWith(rootWithSep)) return null;
-  return target;
+function isLocalHostname(host: string): boolean {
+  const h = host.replace(/^\[|\]$/g, "");
+  return h === "localhost" || h === "127.0.0.1" || h === "::1";
 }
 
-export async function createServer(opts: ServerOptions): Promise<RunningServer> {
+/**
+ * Reject requests addressed to a non-local Host (DNS-rebinding defense: a
+ * rebound attacker domain becomes "same-origin" to localhost and could read GET
+ * responses). Applied to every request — GET included. A missing Host header
+ * (non-HTTP/1.1 clients) is allowed; browsers always send one.
+ */
+function isLocalHost(hostHeader: string | undefined): boolean {
+  if (!hostHeader) return true;
+  return isLocalHostname(hostHeader.replace(/:\d+$/, ""));
+}
+
+/**
+ * Reject browser requests from a non-local Origin (CSRF defense for this
+ * localhost-only tool). Non-browser clients (curl, the SSR check) send no Origin
+ * and are allowed.
+ */
+function isLocalOrigin(origin: string | undefined): boolean {
+  if (!origin) return true;
+  try {
+    return isLocalHostname(new URL(origin).hostname);
+  } catch {
+    return false;
+  }
+}
+
+export interface BuiltApp {
+  app: ReturnType<typeof Fastify>;
+  /** Tear down sockets + watcher + the Fastify app (idempotent-safe). */
+  close: () => Promise<void>;
+}
+
+/**
+ * Build the fully-wired Fastify app (REST + WS + watcher + optional static SPA)
+ * WITHOUT binding a socket, so tests can drive it via `app.inject()`. The
+ * listening wrapper lives in `createServer`.
+ */
+export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
   const app = Fastify({ logger: false, forceCloseConnections: true });
   await app.register(fastifyWebsocket);
 
   const sockets = new Set<WsClient>();
+
+  app.addHook("onRequest", async (req, reply) => {
+    // DNS-rebinding defense — only serve requests addressed to a local Host.
+    if (!isLocalHost(req.headers.host)) {
+      return reply.code(403).send({ ok: false, error: "non-local host 거부됨" });
+    }
+    // CSRF defense — reject state-changing requests from a non-local Origin.
+    if (req.method === "POST" && !isLocalOrigin(req.headers.origin)) {
+      return reply.code(403).send({ ok: false, error: "cross-origin 요청 거부됨" });
+    }
+  });
 
   // --- REST ---------------------------------------------------------------
   app.get("/api/workspace", async () => readWorkspace(opts.manifastDir, opts.projectDir));
@@ -131,7 +177,7 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
       reply.code(400);
       return reply.send("path required");
     }
-    const abs = resolveSafe(opts.projectDir, q.path);
+    const abs = confine(opts.projectDir, q.path);
     if (!abs) {
       reply.code(400);
       return reply.send("invalid path");
@@ -149,7 +195,13 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
 
   // --- WebSocket ----------------------------------------------------------
   await app.register(async (f) => {
-    f.get("/ws", { websocket: true }, (socket) => {
+    f.get("/ws", { websocket: true }, (socket, req) => {
+      // A malicious page could open this socket and observe file-change paths;
+      // gate it to local Origins (non-browser clients send none).
+      if (!isLocalOrigin(req.headers.origin)) {
+        (socket.terminate ?? socket.close)?.call(socket);
+        return;
+      }
       sockets.add(socket);
       socket.on("close", () => sockets.delete(socket));
       socket.on("error", () => sockets.delete(socket));
@@ -194,6 +246,27 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
     });
   }
 
+  const close = async () => {
+    // Browsers keep the /ws live-reload socket open; without forcing them
+    // shut, app.close() waits forever and Ctrl+C appears to hang.
+    for (const s of sockets) {
+      try {
+        (s.terminate ?? s.close)?.call(s);
+      } catch {
+        /* ignore */
+      }
+    }
+    sockets.clear();
+    await watcher.close();
+    await app.close();
+  };
+
+  return { app, close };
+}
+
+export async function createServer(opts: ServerOptions): Promise<RunningServer> {
+  const { app, close } = await buildApp(opts);
+
   // --- Listen -------------------------------------------------------------
   const host = opts.host ?? "127.0.0.1";
   const port = await findFreePort(opts.port, host);
@@ -202,19 +275,6 @@ export async function createServer(opts: ServerOptions): Promise<RunningServer> 
   return {
     port,
     url: `http://localhost:${port}`,
-    close: async () => {
-      // Browsers keep the /ws live-reload socket open; without forcing them
-      // shut, app.close() waits forever and Ctrl+C appears to hang.
-      for (const s of sockets) {
-        try {
-          (s.terminate ?? s.close)?.call(s);
-        } catch {
-          /* ignore */
-        }
-      }
-      sockets.clear();
-      await watcher.close();
-      await app.close();
-    },
+    close,
   };
 }

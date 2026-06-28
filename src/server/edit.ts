@@ -1,22 +1,16 @@
 import { readFile, writeFile } from "node:fs/promises";
-import path from "node:path";
 import crypto from "node:crypto";
 import matter from "gray-matter";
+import { confine } from "./safePath";
 
 // The ONLY place the app writes user docs. Writes are limited to frontmatter
 // keys (uid + lifecycle metadata); the markdown body is never modified.
 
-function within(root: string, target: string): boolean {
-  const r = path.resolve(root);
-  const t = path.resolve(target);
-  return t === r || t.startsWith(r + path.sep);
-}
-
 function resolveDoc(projectDir: string, rel: string): string | null {
   if (!rel || !rel.toLowerCase().endsWith(".md")) return null;
-  const abs = path.resolve(projectDir, rel);
-  if (!within(projectDir, abs)) return null;
-  return abs;
+  // confine follows symlinks so a link inside the workspace can't redirect a
+  // frontmatter write to a file outside it.
+  return confine(projectDir, rel);
 }
 
 function genUid(): string {

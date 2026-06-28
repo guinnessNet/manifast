@@ -3,6 +3,7 @@ import type { Stats } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
+import { confine, isConfined } from "./safePath";
 import {
   WireframeSchema,
   TasksFileSchema,
@@ -142,12 +143,17 @@ interface ManifestConfig {
 }
 
 async function readManifest(manifastDir: string, projectDir: string): Promise<ManifestConfig> {
-  const raw = await readText(path.join(manifastDir, "manifast.json"));
-  if (raw != null) {
-    const parsed = parseJson(raw);
-    if (parsed.ok) {
-      const result = ManifestSchema.safeParse(parsed.value);
-      if (result.success) return { project: result.data.project, sources: result.data.sources };
+  const file = path.join(manifastDir, "manifast.json");
+  // If `.manifast` itself is a junction/symlink escaping the root, don't read
+  // (or leak the project name from) an external manifest — fall back to default.
+  if (isConfined(projectDir, file)) {
+    const raw = await readText(file);
+    if (raw != null) {
+      const parsed = parseJson(raw);
+      if (parsed.ok) {
+        const result = ManifestSchema.safeParse(parsed.value);
+        if (result.success) return { project: result.data.project, sources: result.data.sources };
+      }
     }
   }
   return { project: { name: path.basename(projectDir) || "manifast" } };
@@ -442,12 +448,17 @@ export async function resolveWatchRoots(
 ): Promise<{ dirs: string[]; files: string[] }> {
   const { sources } = await readManifest(manifastDir, projectDir);
   const entries = sources?.docs ?? DEFAULT_DOC_SOURCES;
-  const dirs = new Set<string>([manifastDir]);
+  // Only watch roots that stay inside the project root once symlinks/junctions
+  // are resolved — otherwise a `.manifast` (or source dir) junction would make
+  // the watcher follow it and broadcast outside file changes over the WS.
+  const dirs = new Set<string>();
+  if (isConfined(projectDir, manifastDir)) dirs.add(manifastDir);
   const files = new Set<string>();
   for (const entry of entries) {
     const abs = path.resolve(projectDir, entry);
     if (!within(projectDir, abs)) continue;
     if (within(manifastDir, abs)) continue; // already covered
+    if (!isConfined(projectDir, abs)) continue;
     const st = await stat(abs).catch(() => null);
     if (st?.isDirectory()) dirs.add(abs);
     else if (st?.isFile()) files.add(abs);
@@ -518,13 +529,22 @@ async function readDiagramMeta(manifastDir: string, file: string): Promise<Diagr
 
 export async function readWorkspace(manifastDir: string, projectDir: string): Promise<WorkspaceDTO> {
   const config = await readManifest(manifastDir, projectDir);
-  const [wfFiles, diagFiles, docs, tasks, plan] = await Promise.all([
-    listFiles(path.join(manifastDir, "wireframes"), ".json"),
-    listFiles(path.join(manifastDir, "diagrams"), ".json"),
-    discoverDocs(projectDir, config.sources),
+  const wfDir = path.join(manifastDir, "wireframes");
+  const diagDir = path.join(manifastDir, "diagrams");
+  // Drop anything that escapes the project root once symlinks/junctions are
+  // resolved, so a junction at a source dir can't leak outside files (or their
+  // id/title metadata) into the workspace snapshot.
+  const [wfFiles, diagFiles, docs, tasksRaw, planRaw] = await Promise.all([
+    listFiles(wfDir, ".json").then((fs) => fs.filter((f) => isConfined(projectDir, path.join(wfDir, f)))),
+    listFiles(diagDir, ".json").then((fs) => fs.filter((f) => isConfined(projectDir, path.join(diagDir, f)))),
+    discoverDocs(projectDir, config.sources).then((ds) =>
+      ds.filter((d) => isConfined(projectDir, path.join(projectDir, d.path))),
+    ),
     readTasks(manifastDir),
     readPlan(manifastDir),
   ]);
+  const tasks = tasksRaw && isConfined(projectDir, path.join(manifastDir, "tasks")) ? tasksRaw : null;
+  const plan = planRaw && isConfined(projectDir, path.join(manifastDir, "plan")) ? planRaw : null;
 
   const [wireframes, diagrams] = await Promise.all([
     Promise.all(wfFiles.map((f) => readWireframeMeta(manifastDir, f))),
@@ -551,9 +571,9 @@ export async function readWorkspace(manifastDir: string, projectDir: string): Pr
 // --- Public: single file (full content) -----------------------------------
 
 function resolveSafe(projectDir: string, relPath: string): string | null {
-  const target = path.resolve(projectDir, relPath);
-  if (!within(projectDir, target)) return null;
-  return target;
+  // `confine` resolves symlinks so a link inside the workspace can't read
+  // outside it (a plain prefix check on path.resolve() would miss that).
+  return confine(projectDir, relPath);
 }
 
 export async function readFileResource(projectDir: string, relPath: string): Promise<FileResponse> {
@@ -624,6 +644,10 @@ export async function listAllFiles(manifastDir: string, projectDir: string): Pro
     for (const e of entries) {
       if (e.name.startsWith(".")) continue;
       const abs = path.join(dir, e.name);
+      // Skip anything that escapes the project root once symlinks/junctions are
+      // resolved, so a `.manifast` (or sub-dir) junction can't leak outside file
+      // names — or send us walking an external tree — via the export listing.
+      if (!isConfined(projectDir, abs)) continue;
       if (e.isDirectory()) await walk(abs);
       else if (e.isFile()) out.push(toPosix(path.relative(projectDir, abs)));
     }

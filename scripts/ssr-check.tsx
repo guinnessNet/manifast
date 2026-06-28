@@ -1,4 +1,3 @@
-import React from "react";
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
@@ -15,7 +14,7 @@ import { LinkChip } from "../src/web/components/LinkChip";
 import { MapView } from "../src/web/components/diagram/MapView";
 import { NavContext } from "../src/web/lib/nav";
 import { buildProjectMap } from "../src/web/lib/graph";
-import { layoutDiagram } from "../src/web/lib/layout";
+import { layoutDiagram, isFlowKind, isTreeKind } from "../src/web/lib/layout";
 import { DiagramFileSchema } from "@shared/schema/diagram";
 
 let ok = true;
@@ -80,6 +79,16 @@ check("MapView renders node labels", mapHtml.includes("로그인") || mapHtml.in
 const arch = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/architecture.json", "utf8")));
 const al = layoutDiagram(arch);
 check("agent architecture diagram laid out (dagre)", al.nodes.length === arch.nodes.length && al.width > 0);
+
+// 7b. user-flow diagram parses (kind=flow) + lays out
+const flow = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/user-flow.json", "utf8")));
+const fl = layoutDiagram(flow);
+check("user-flow diagram parses + laid out", isFlowKind(flow.kind) && fl.nodes.length === flow.nodes.length && fl.width > 0);
+
+// 7c. feature-tree diagram parses (kind=tree) + lays out
+const tree = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/feature-tree.json", "utf8")));
+const tl = layoutDiagram(tree);
+check("feature-tree diagram parses + laid out", isTreeKind(tree.kind) && tl.nodes.length === tree.nodes.length && tl.width > 0);
 
 console.log(ok ? "\nALL SSR CHECKS PASSED" : "\nSSR CHECKS FAILED");
 process.exit(ok ? 0 : 1);

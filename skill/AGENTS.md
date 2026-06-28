@@ -7,6 +7,12 @@ product docs, create/modify the files described below. Keep every file a valid
 JSON or Markdown-with-frontmatter document — the viewer shows an error banner for
 anything it can't parse but keeps rendering the rest.
 
+**After authoring or editing, run `npx manifast validate`** (add `--strict` to fail
+on warnings too). It re-checks the whole workspace against these schemas + the
+cross-references (links, ids) and exits non-zero on any error — if it fails, you
+are not done. This is the LLM-agnostic gate: it holds regardless of which agent or
+tool wrote the files.
+
 > If a `.claude/skills/manifast/SKILL.md` exists, it contains the same guidance.
 
 ## 0. 두 작업 모드
@@ -225,6 +231,13 @@ clickable + freshness-aware: prefer `{kind:"doc", id}` for a tracked doc (or
 `{kind:"path", id:"<repo-relative path>"}` — the app resolves it to the doc so it still
 clicks and shows staleness. Don't leave half the nodes edgeless — add relates/supersedes
 edges or rely on groups. Manifast also shows an auto project map (links) with no file needed.
+
+Pick `kind`/`layout` to match the shape: `flow`/`userflow` → directional **user flow** (its own
+**User Flow** tab) with typed nodes `start|end` (pills) · `page` (add `ref:{kind:"wireframe",id}`) ·
+`action` · `decision`, and **labelled** edges (`"예"`/`"아니오"`); `tree`/`sitemap` → top-down
+**feature tree** (its own **Tree** tab; `project|requirement|feature|detail` parent→child edges,
+intent in `description`); `docmap`/`mindmap` → radial mind map; else → layered architecture. See
+`examples/.manifast/diagrams/{user-flow,feature-tree}.json`.
 
 ## 6. Links (single source of truth — no duplication)
 

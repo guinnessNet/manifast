@@ -19,6 +19,8 @@ const TITLES: Record<View, string> = {
   docs: "Docs",
   tasks: "Tasks",
   plan: "Plan",
+  flow: "User Flow",
+  tree: "Tree",
   map: "Map",
 };
 
@@ -198,6 +200,8 @@ export default function App() {
               <Board tasksData={data.items.tasks} graph={graph} highlightTask={highlightTask} />
             )}
             {graph && view === "plan" && <Roadmap planData={data.items.plan} graph={graph} />}
+            {view === "flow" && <MapView data={data} tick={reloadTick} mode="flow" />}
+            {view === "tree" && <MapView data={data} tick={reloadTick} mode="tree" />}
             {view === "map" && <MapView data={data} tick={reloadTick} />}
           </div>
         </main>

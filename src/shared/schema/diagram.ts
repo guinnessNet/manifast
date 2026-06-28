@@ -13,7 +13,11 @@ export const DiagramNodeSchema = z.object({
   id: z.string(),
   label: z.string(),
   group: z.string().optional(), // group/cluster id
-  kind: z.string().optional(), // e.g. module|service|layer|db|external|doc|wireframe|task
+  // free-form, but the app gives these conventional kinds a typed visual:
+  //   architecture: module|service|layer|db|external|folder
+  //   user-flow:    start|page|action|decision|end
+  //   feature-tree: project|requirement|feature|detail
+  kind: z.string().optional(),
   description: z.string().optional(),
   ref: DiagramRefSchema.optional(), // clickable link to a manifast item
 });
@@ -39,6 +43,7 @@ export const DiagramFileSchema = z.object({
   title: z.string(),
   kind: z.string().optional().default("diagram"), // architecture|docmap|flow|...
   direction: z.enum(["TB", "LR", "BT", "RL"]).optional(), // layout direction
+  layout: z.enum(["layered", "radial", "tree"]).optional(), // visual strategy; default inferred from kind (docmap→radial, sitemap/tree→tree, else layered)
   generatedBy: z.string().optional(),
   generatedAt: z.string().optional(),
   groups: z.array(DiagramGroupSchema).optional(),

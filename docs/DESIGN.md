@@ -406,7 +406,7 @@ Export 버튼은 각 뷰 우상단 `ExportMenu`. 서버는 파일 제공만, 변
 ## 9. 프로젝트(도구) 구조
 
 ```
-manifast/                         (= D:\dev\manifast)
+manifast/
   package.json                    (bin.manifast → dist/cli/index.js, scripts: dev/build)
   tsconfig.json  vite.config.ts  tailwind.config / postcss
   src/
@@ -436,7 +436,7 @@ manifast/                         (= D:\dev\manifast)
     schema/                        (빌드 시 zod→json schema 생성물)
     examples/.manifast/...         (init 시드용 예제 워크스페이스)
   dist/                           (빌드: cli + server + web)
-  docs/DESIGN.md  docs/GOAL_PROMPT.md
+  docs/DESIGN.md
 ```
 
 ---

@@ -100,6 +100,26 @@ export function WireframeExportMenu({
   );
 }
 
+export function MapExportMenu({
+  contentRef,
+  name,
+  path,
+}: {
+  contentRef: RefObject<HTMLDivElement | null>;
+  name: string;
+  /** When set (an authored diagram), offer the raw JSON too. Omitted for the auto project map. */
+  path?: string;
+}) {
+  // PNG/SVG only: map nodes use CSS vars (var(--accent) …) so standalone-HTML
+  // serialization would lose colors; html-to-image rasterizes computed styles fine.
+  const items: Item[] = [
+    { label: "PNG", icon: <FileImage size={14} />, onClick: () => { if (contentRef.current) return exportPNG(contentRef.current, name); } },
+    { label: "SVG", icon: <FileCode size={14} />, onClick: () => { if (contentRef.current) return exportSVG(contentRef.current, name); } },
+  ];
+  if (path) items.push({ label: "JSON", icon: <FileJson size={14} />, onClick: () => exportRaw(path, `${name}.json`, "application/json") });
+  return <Dropdown items={items} />;
+}
+
 export function DocExportMenu({
   docRef,
   path,

@@ -13,3 +13,9 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+
+# throwaway e2e workspace (copied from skill/examples by global-setup)
+test/.e2e-workspace/
+
+# manifast-installed skill copy (dogfooding artifact; regenerate via `manifast init`)
+.claude/skills/manifast/

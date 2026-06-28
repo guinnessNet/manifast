@@ -1,7 +1,125 @@
 # Changelog
 
-All notable changes to Manifast. (Local package; not published to npm — install
-globally with `npm install -g .` after bumping the version.)
+All notable changes to Manifast. Published on npm as
+[`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
+Building from source? Bump the version, then `npm run build && npm install -g .`.
+
+## 1.2.1 — `manifast validate` + LLM-agnostic guide + security hardening (2026-06-28)
+
+- **New `manifast validate [dir]` command.** Re-parses the workspace through the
+  same zod schemas the app uses and checks cross-references (broken
+  spec→wireframe/tasks links, doc `related`/`deprecatedBy`, task
+  `specId`/`wireframeId`/`deps`, plan `taskIds`, and diagram edge endpoints /
+  `node.ref` — incl. `path` refs pointing at a file that must exist in-root —
+  / `node.group`) plus duplicate ids, exiting non-zero on any error
+  (`--strict` also fails on warnings). Each problem is reported once at the right
+  level (schema failures = errors, inferrable doc-id clashes / frontmatter
+  warnings = warnings). An **LLM-agnostic gate**: any agent can author the files,
+  but bad output fails loudly instead of being silently ingested.
+- **Authoring guide is now installed at an LLM-neutral path.** `manifast init`
+  always writes the full guide to `.manifast/AGENTS.md` (previously only the
+  root `AGENTS.md`, which is skipped when the project already has its own), and
+  the durable directive points **every** agent there + tells it to run
+  `manifast validate`. Fixes the case where a project's own `AGENTS.md` left
+  Codex/other tools without the schema.
+- **Security hardening.** File access resolves realpaths so a symlink/junction
+  inside the workspace can't escape the project root — both on the read/write
+  endpoints (`/api/raw`, `/api/file`, doc writes) and during workspace discovery
+  — including the manifest read, the file-export listing, and the **watcher
+  roots**, so even a `.manifast` directory that is itself a junction can't leak
+  an outside project name / file names, get its external changes broadcast over
+  the live-reload WS, or send the export walker into an outside tree. Every
+  request must
+  carry a local `Host` (DNS-rebinding defense, GET included) and state-changing
+  POSTs / `/ws` upgrades a local `Origin` (CSRF). Bumped `@fastify/static` to
+  `^9.1.3` (path-traversal advisories).
+
+## 1.2.0 — user-flow & feature-tree views (2026-06-26)
+
+- **New "User Flow" view.** Agent-authored `kind:"flow"` diagrams render as a
+  dedicated, read-only user flow: typed nodes — `start`/`end` (green/red **pills**),
+  `page` (clicks through to its wireframe via `ref`), `action`, `decision` — laid out
+  top-down/left-right by dagre with **arrowed, labelled edges** (e.g. `예`/`아니오`).
+  Lives in its own sidebar tab; no in-app editing — the agent authors the JSON, the app
+  draws + live-reloads + exports.
+- **New "Tree" view.** `kind:"tree"` hierarchy diagrams render top-down as a feature
+  tree (`project → requirement → feature → detail`) with per-level node colors and the
+  1–3 line intent in `node.description`. Its own sidebar tab.
+- **Map view now has Export.** The diagram views (Map / User Flow / Tree) gain a
+  PNG / SVG menu (+ raw JSON for an authored diagram) — the Map view previously had none.
+- **Authoring contract:** `skill/SKILL.md` + `AGENTS.md` document the flow/tree recipes
+  and conventional node kinds; seeded `examples/.manifast/diagrams/{user-flow,feature-tree}.json`.
+- Internals: `MapView` gains a `mode` (`map`/`flow`/`tree`) that scopes the existing
+  dagre renderer by diagram kind (`isFlowKind`/`isTreeKind` in `lib/layout.ts`) — one
+  renderer, no duplication; `ssr-check` guards both new examples (parse + layout).
+
+## 1.1.0 — collapsible docs folder tree (2026-06-26)
+
+- **The Docs sidebar is now a collapsible folder tree.** The flat, full-path
+  group headers are replaced by a nested folder hierarchy (like VS Code): each
+  folder collapses/expands via a chevron (click · Enter · Space), carries a
+  **recursive doc-count badge** (e.g. `claim 15`), and **모두 접기 / 모두 펼치기**
+  collapse/expand the whole tree at once. Folders sort before files; the
+  agent-authored `.manifast/prd` + `.manifast/specs` keep their PRD/Specs labels.
+- **State persists.** Collapse/expand state is saved to `localStorage`
+  (`mf-docs-collapsed`) so it survives a full refresh **and** live reload; the
+  stored set self-prunes paths for folders that were renamed/deleted.
+- **Search auto-expands.** Typing in the doc filter force-expands every folder
+  containing a match; while searching, folder rows render as static headers so
+  the auto-expand can't be silently toggled away behind the user's back.
+- **Accessibility.** Folder toggles are real `<button>`s with `aria-expanded`, an
+  `aria-label`, and a visible focus ring; count badges + collapse controls use the
+  AA-contrast `--text-muted` token.
+- Internals: a new pure `src/web/lib/docTree.ts` (`buildDocTree` / `allFolderPaths`
+  / `folderLabel`) with unit tests + DocRail render tests. The Map view's separate
+  “폴더로 집계” aggregation is unchanged — this is the **sidebar** tree.
+
+## 1.0.1 — doc readability (2026-06-26)
+
+- **Markdown body contrast:** `.mf-prose` body text now uses the full-strength
+  `--text` token (was `--text-muted`, which read as washed-out gray). Secondary
+  chrome (blockquote, table cells) stays muted.
+- **WCAG AA gray tokens:** darkened `--text-muted`/`--text-faint` on both themes
+  to clear ≥4.5:1 (light muted #52525b ~7:1, faint #6b6b76 ~4.8:1; dark muted
+  #9a9aa4 ~6.6:1, faint #7a7a84 ~4.6:1). Body size 14.5px→15px.
+- **Korean font stack:** lead with Pretendard and keep explicit Hangul fallbacks
+  (Apple SD Gothic Neo / Malgun Gothic / Noto Sans KR) so 한글 no longer falls
+  back to bare `system-ui`.
+
+## 1.0.0 — first public release (2026-06-26)
+
+The first npm-ready release. Pre-publish hardening on top of the 1.2.x
+line (see the note below the 1.2.x entries); no user-facing behavior change versus
+1.2.15 — this is the trust/packaging milestone, not a feature drop.
+
+- **Packaging:** MIT `LICENSE` + `license` field; `repository`/`homepage`/`bugs`/
+  `author`/`keywords`; `publishConfig.access=public`; a `prepublishOnly` gate
+  (`typecheck && check && test && build`) so `npm publish` can't ship stale/untested output.
+- **Test suite (vitest):** 100 unit + integration tests covering the zod schemas,
+  the 1.2.15 graph logic (`graph.ts`: orphans, `related` both directions, id/uid
+  resolution, `sources` overlap, doc↔doc + chained source edges, no self/dupe edges),
+  `links.ts`, `layout.ts`, the extracted `smoothPath` curve, `workspace.ts`
+  (parse/inferDocType/slug/16KB head/mtime cache), the **only writer** `edit.ts`
+  (uid + status only, body + EOL preserved, idempotent) through `POST /api/doc/*`,
+  the REST API via `app.inject()`, **path-traversal confinement (P0 security)**,
+  the watcher's dir-vs-file split, and the graceful-shutdown force-close.
+- **Refactors (internal, no behavior change):** `smoothPath` extracted to a pure
+  module (`src/web/lib/smoothPath.ts`); `buildApp()` split out of `createServer()`
+  so the server can be driven headlessly in tests.
+- **E2E (Playwright):** drives the built SPA (`dist/web`) served by the real CLI —
+  boot + live pill, switch all 5 views, theme + accent persist across reload,
+  canvas zoom/Fit, `.zip` export download, Map bezier edges, and live-reload of a
+  new doc. The e2e workspace lifecycle is owned by `global-setup.ts` for clean
+  cross-platform teardown.
+- **CI (GitHub Actions):** matrix Node 20/22 × ubuntu/windows → typecheck →
+  schema-drift guard → test → build → SSR check → `npm pack --dry-run`; a separate
+  Linux e2e job; and a tag-gated `npm publish --access public` job (runs `prepublishOnly`).
+- **`.gitattributes`** pins LF so the schema-drift `git diff` guard is deterministic
+  across OSes.
+- **Perf smoke:** a test parses 300+ docs incl. a ~200KB one and re-reads from the
+  mtime cache, guarding the head-16KB + cache fast-path.
+- **a11y guards (e2e):** key controls expose accessible names, the theme toggle is
+  keyboard-operable, and Tab reaches interactive controls.
 
 ## 1.2.15
 
@@ -51,6 +169,10 @@ waypoints, which kinked sharply at every bend. They now render as a Catmull-Rom 
 resolved while a browser held the live-reload WebSocket open. Now the server force-closes open WS
 sockets (+ Fastify `forceCloseConnections`), and the CLI has a 2s force-exit fallback (a second
 Ctrl+C exits immediately).
+
+> **Note on the 1.2.1 → 1.2.12 jump:** versions 1.2.2–1.2.11 were local,
+> unreleased iterations whose changes were folded into the 1.2.12+ entries above.
+> The history is intentionally continuous from 1.2.12 onward.
 
 ## 1.2.1
 

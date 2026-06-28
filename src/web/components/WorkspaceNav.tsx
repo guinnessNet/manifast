@@ -1,13 +1,16 @@
 import type { WorkspaceDTO } from "@shared/types";
 import type { View } from "../lib/nav";
+import { isFlowKind, isTreeKind } from "../lib/layout";
 import { cn } from "../lib/cn";
-import { LayoutGrid, FileText, Columns3, Route, Network, Folder } from "lucide-react";
+import { LayoutGrid, FileText, Columns3, Route, Workflow, ListTree, Network, Folder } from "lucide-react";
 
 const VIEWS: { key: View; label: string; icon: typeof LayoutGrid }[] = [
   { key: "wireframes", label: "Wireframes", icon: LayoutGrid },
   { key: "docs", label: "Docs", icon: FileText },
   { key: "tasks", label: "Tasks", icon: Columns3 },
   { key: "plan", label: "Plan", icon: Route },
+  { key: "flow", label: "User Flow", icon: Workflow },
+  { key: "tree", label: "Tree", icon: ListTree },
   { key: "map", label: "Map", icon: Network },
 ];
 
@@ -23,6 +26,8 @@ export function WorkspaceNav({ data, view, onView }: WorkspaceNavProps) {
     docs: data.items.docs.length,
     tasks: data.items.tasks?.tasks.length ?? 0,
     plan: data.items.plan?.phases.length ?? 0,
+    flow: data.items.diagrams.filter((d) => isFlowKind(d.kind)).length,
+    tree: data.items.diagrams.filter((d) => isTreeKind(d.kind)).length,
     map: data.items.diagrams.length,
   };
 

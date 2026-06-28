@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   KanbanSquare,
   ChevronDown,
+  ChevronRight,
   Check,
   Hash,
   Plus,
@@ -14,6 +15,8 @@ import {
   FileCode,
   Clock,
   FileText,
+  Folder,
+  FolderOpen,
   Search,
   Archive,
 } from "lucide-react";
@@ -28,6 +31,7 @@ import { DocExportMenu } from "../ExportMenu";
 import { useNavigate } from "../../lib/nav";
 import { WireframeThumb } from "../wireframe/WireframeThumb";
 import { adoptDoc, setDocStatus, setDocReview } from "../../lib/api";
+import { buildDocTree, allFolderPaths, folderLabel, type DocTreeFolder } from "../../lib/docTree";
 import { cn } from "../../lib/cn";
 
 const STATUSES = ["draft", "active", "done", "deprecated", "archived"];
@@ -214,21 +218,27 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
   );
 }
 
-// ── left rail: search + grouped doc list + archived toggle ──────────────────
-function docFolder(p: string): string {
-  const norm = p.replace(/\\/g, "/");
-  const i = norm.lastIndexOf("/");
-  return i < 0 ? "" : norm.slice(0, i);
+// ── left rail: search + collapsible folder tree + archived toggle ───────────
+const COLLAPSE_KEY = "mf-docs-collapsed";
+
+/** Collapsed-folder set, persisted across reloads (so the tree survives refresh + live reload). */
+function loadCollapsed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(COLLAPSE_KEY);
+    if (raw) {
+      const v = JSON.parse(raw);
+      // Validate: a bare JSON string is iterable and would seed a Set of single
+      // chars; only accept an array of strings, else reset.
+      if (Array.isArray(v)) return new Set(v.filter((x): x is string => typeof x === "string"));
+    }
+  } catch {
+    /* ignore malformed/disabled storage */
+  }
+  return new Set();
 }
-function folderLabel(f: string): string {
-  if (f === "") return "(root)";
-  if (f === ".manifast/prd") return "PRD";
-  if (f === ".manifast/specs") return "Specs";
-  return f;
-}
-function folderRank(f: string): number {
-  return f === ".manifast/prd" ? 0 : f === ".manifast/specs" ? 1 : f === "" ? 2 : 3;
-}
+
+const INDENT_PX = 14; // per-depth indentation step
+const indentStyle = (depth: number) => ({ paddingLeft: 8 + depth * INDENT_PX });
 
 function DocRail({
   docs,
@@ -241,23 +251,49 @@ function DocRail({
 }) {
   const [showArchived, setShowArchived] = useState(false);
   const [q, setQ] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
+
+  // Every folder path that actually exists (built from ALL docs incl. archived,
+  // independent of the search/archived filters) so we never drop a live folder.
+  const knownFolders = useMemo(() => new Set(allFolderPaths(buildDocTree(docs))), [docs]);
+
+  // Persist collapse state — survives a full page refresh; in-memory state already
+  // survives live reload (DocView is not unmounted on a workspace change). Only
+  // paths for folders that still exist are written, so storage self-prunes entries
+  // for folders that were renamed/deleted.
+  useEffect(() => {
+    try {
+      const live = [...collapsed].filter((p) => knownFolders.has(p));
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify(live));
+    } catch {
+      /* ignore */
+    }
+  }, [collapsed, knownFolders]);
 
   const archivedCount = docs.filter((d) => d.status === "archived").length;
   const query = q.trim().toLowerCase();
-  let visible = showArchived ? docs : docs.filter((d) => d.status !== "archived");
-  if (query) {
-    visible = visible.filter(
-      (d) => d.title.toLowerCase().includes(query) || d.path.toLowerCase().includes(query),
-    );
-  }
+  const searching = query.length > 0;
 
-  const byFolder = new Map<string, DocMeta[]>();
-  for (const d of visible) {
-    const f = docFolder(d.path);
-    if (!byFolder.has(f)) byFolder.set(f, []);
-    byFolder.get(f)!.push(d);
-  }
-  const folders = [...byFolder.keys()].sort((a, b) => folderRank(a) - folderRank(b) || a.localeCompare(b));
+  const visible = useMemo(() => {
+    let v = showArchived ? docs : docs.filter((d) => d.status !== "archived");
+    if (query) {
+      v = v.filter((d) => d.title.toLowerCase().includes(query) || d.path.toLowerCase().includes(query));
+    }
+    return v;
+  }, [docs, showArchived, query]);
+
+  const tree = useMemo(() => buildDocTree(visible), [visible]);
+  const folderPaths = useMemo(() => allFolderPaths(tree), [tree]);
+
+  const toggle = (path: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  // While searching every folder auto-expands so matches are always visible.
+  const isCollapsed = (path: string) => !searching && collapsed.has(path);
 
   return (
     <div className="flex w-[268px] shrink-0 flex-col border-r border-[var(--border)] bg-[var(--bg-elevated)]">
@@ -273,51 +309,41 @@ function DocRail({
         </div>
       </div>
 
+      {!searching && folderPaths.length > 0 && (
+        <div className="flex items-center justify-end gap-0.5 px-3 pb-1.5">
+          <button
+            onClick={() => setCollapsed((prev) => new Set([...prev, ...folderPaths]))}
+            title="모든 폴더 접기"
+            className="rounded-md px-1.5 py-0.5 text-[11px] text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
+          >
+            모두 접기
+          </button>
+          <button
+            onClick={() => setCollapsed(new Set())}
+            title="모든 폴더 펼치기"
+            className="rounded-md px-1.5 py-0.5 text-[11px] text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
+          >
+            모두 펼치기
+          </button>
+        </div>
+      )}
+
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-1">
         {docs.length === 0 && <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">문서가 없습니다</p>}
-        {folders.map((f) => (
-          <div key={f}>
-            <div className="px-2.5 pb-1.5 pt-3 text-[10px] font-semibold uppercase tracking-[0.07em] text-[var(--text-faint)]">
-              {folderLabel(f)} <span className="opacity-70">{byFolder.get(f)!.length}</span>
-            </div>
-            {byFolder
-              .get(f)!
-              .sort((a, b) => a.title.localeCompare(b.title))
-              .map((d) => {
-                const active = selected === d.path;
-                const dim = d.status === "deprecated" || d.status === "archived";
-                return (
-                  <button
-                    key={d.path}
-                    onClick={() => onSelect(d.path)}
-                    className={cn(
-                      "flex w-full items-center gap-[9px] rounded-lg px-2.5 py-[7px] text-left transition-colors",
-                      active ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--accent-soft)]",
-                    )}
-                  >
-                    <FileText size={14} className="shrink-0 opacity-65" style={{ color: active ? "var(--accent)" : "var(--text-muted)" }} />
-                    <span
-                      className={cn(
-                        "min-w-0 flex-1 truncate text-[13px]",
-                        active
-                          ? "font-semibold text-[var(--accent)]"
-                          : dim
-                            ? "text-[var(--text-faint)] line-through"
-                            : "font-medium text-[var(--text)]",
-                      )}
-                    >
-                      {d.title}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1.5">
-                      {(d.warning || !d.ok || d.freshness?.stale) && (
-                        <AlertTriangle size={13} className="text-[var(--warn)]" />
-                      )}
-                      <span className="h-[7px] w-[7px] rounded-full" style={{ background: STATUS_DOT[d.status] ?? "var(--text-faint)" }} title={d.status} />
-                    </span>
-                  </button>
-                );
-              })}
-          </div>
+        {tree.folders.map((child) => (
+          <FolderNode
+            key={child.path}
+            folder={child}
+            depth={0}
+            selected={selected}
+            onSelect={onSelect}
+            isCollapsed={isCollapsed}
+            onToggle={toggle}
+            interactive={!searching}
+          />
+        ))}
+        {tree.docs.map((d) => (
+          <DocButton key={d.path} doc={d} depth={0} active={selected === d.path} onSelect={onSelect} />
         ))}
         {visible.length === 0 && docs.length > 0 && (
           <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">일치하는 문서가 없습니다</p>
@@ -336,6 +362,135 @@ function DocRail({
         </div>
       )}
     </div>
+  );
+}
+
+/** One collapsible folder row + (when expanded) its sub-folders and docs. */
+function FolderNode({
+  folder,
+  depth,
+  selected,
+  onSelect,
+  isCollapsed,
+  onToggle,
+  interactive,
+}: {
+  folder: DocTreeFolder;
+  depth: number;
+  selected?: string;
+  onSelect: (p: string) => void;
+  isCollapsed: (path: string) => boolean;
+  onToggle: (path: string) => void;
+  /** False during search: folders are force-expanded, so the row is a static
+   * (non-toggleable) header — avoids a focusable control whose click would be a
+   * no-op yet silently mutate the persisted collapse state. */
+  interactive: boolean;
+}) {
+  const collapsed = isCollapsed(folder.path);
+  const label = folderLabel(folder);
+  const inner = (
+    <>
+      <ChevronRight
+        size={13}
+        className="shrink-0 text-[var(--text-faint)] transition-transform"
+        style={{ transform: collapsed ? "none" : "rotate(90deg)" }}
+      />
+      {collapsed ? (
+        <Folder size={13} className="shrink-0 text-[var(--text-muted)]" />
+      ) : (
+        <FolderOpen size={13} className="shrink-0 text-[var(--text-muted)]" />
+      )}
+      <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-[var(--text-muted)]">{label}</span>
+      <span className="shrink-0 text-[11px] tabular-nums text-[var(--text-muted)]">{folder.count}</span>
+    </>
+  );
+  return (
+    <div>
+      {interactive ? (
+        <button
+          type="button"
+          onClick={() => onToggle(folder.path)}
+          aria-expanded={!collapsed}
+          aria-label={`${label} 폴더, 문서 ${folder.count}개, ${collapsed ? "접힘" : "펼침"}`}
+          title={folder.path}
+          style={indentStyle(depth)}
+          className="flex w-full items-center gap-1.5 rounded-lg py-[6px] pr-2.5 text-left transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        >
+          {inner}
+        </button>
+      ) : (
+        <div
+          title={folder.path}
+          style={indentStyle(depth)}
+          className="flex w-full items-center gap-1.5 py-[6px] pr-2.5 text-left"
+        >
+          {inner}
+        </div>
+      )}
+      {!collapsed && (
+        <div>
+          {folder.folders.map((child) => (
+            <FolderNode
+              key={child.path}
+              folder={child}
+              depth={depth + 1}
+              selected={selected}
+              onSelect={onSelect}
+              isCollapsed={isCollapsed}
+              onToggle={onToggle}
+              interactive={interactive}
+            />
+          ))}
+          {folder.docs.map((d) => (
+            <DocButton key={d.path} doc={d} depth={depth + 1} active={selected === d.path} onSelect={onSelect} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** A single doc leaf in the tree (icon · title · warning · status dot). */
+function DocButton({
+  doc,
+  depth,
+  active,
+  onSelect,
+}: {
+  doc: DocMeta;
+  depth: number;
+  active: boolean;
+  onSelect: (p: string) => void;
+}) {
+  const dim = doc.status === "deprecated" || doc.status === "archived";
+  return (
+    <button
+      onClick={() => onSelect(doc.path)}
+      title={doc.path}
+      style={indentStyle(depth)}
+      className={cn(
+        "flex w-full items-center gap-[9px] rounded-lg py-[7px] pr-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
+        active ? "bg-[var(--accent-soft)]" : "hover:bg-[var(--accent-soft)]",
+      )}
+    >
+      <FileText size={14} className="shrink-0 opacity-65" style={{ color: active ? "var(--accent)" : "var(--text-muted)" }} />
+      <span
+        className={cn(
+          "min-w-0 flex-1 truncate text-[13px]",
+          active
+            ? "font-semibold text-[var(--accent)]"
+            : dim
+              ? "text-[var(--text-faint)] line-through"
+              : "font-medium text-[var(--text)]",
+        )}
+      >
+        {doc.title}
+      </span>
+      <span className="flex shrink-0 items-center gap-1.5">
+        {(doc.warning || !doc.ok || doc.freshness?.stale) && <AlertTriangle size={13} className="text-[var(--warn)]" />}
+        <span className="h-[7px] w-[7px] rounded-full" style={{ background: STATUS_DOT[doc.status] ?? "var(--text-faint)" }} title={doc.status} />
+      </span>
+    </button>
   );
 }
 

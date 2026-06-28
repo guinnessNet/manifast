@@ -1,0 +1,11 @@
+# Normalize all text to LF in the repository so the schema-drift guard
+# (`gen:schema` then `git diff --exit-code skill/schema`) is deterministic
+# across Windows + Linux CI runners. Binary assets are left untouched.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

@@ -2,7 +2,7 @@
 
 **A local, read-only visualizer for AI-authored wireframes and dev docs.**
 
-> v1.2.15 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
+> v1.2.0 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
 JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
@@ -11,10 +11,21 @@ JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
 **light/dark themes** + accent colors, and **export** to PNG/SVG/HTML/JSON/
 Markdown/ZIP. Fully local, personal, no accounts, no database, no AI calls.
 
-The app never writes your files (the only exception is `manifast init`, which
-scaffolds and installs the skill, and never overwrites anything). The single
-source of truth is the `.manifast/` folder; the server just reads, validates,
-and serves it.
+The app never writes your files, with two scoped exceptions: `manifast init`
+(scaffolds and installs the skill, never overwriting anything) and the
+[Document management](#document-management-v2) feature, which writes **only doc
+frontmatter** (`uid` + status/metadata, never the body). The single source of
+truth is the `.manifast/` folder; the server just reads, validates, and serves it.
+
+## Screenshots
+
+![Wireframe canvas](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/wireframes.png)
+
+| Docs | Tasks |
+|---|---|
+| ![Docs](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/docs.png) | ![Tasks board](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/tasks.png) |
+| **Plan** | **Map** |
+| ![Roadmap](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/plan.png) | ![Relationship map](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/map.png) |
 
 ---
 
@@ -25,17 +36,22 @@ and serves it.
 
 ## Install
 
-Manifast isn't published to npm — install the CLI **globally from this folder**:
+Install the CLI globally from npm:
 
 ```bash
-npm install        # dependencies
-npm run build      # build the SPA (dist/web) + CLI (dist/cli)
-npm install -g .   # put the `manifast` command on your PATH
+npm install -g manifast   # put the `manifast` command on your PATH
+manifast --version
 ```
 
-To update after changing the source, bump `version` in `package.json`, then re-run
-`npm run build && npm install -g .` — installing the **same** version reports "up
-to date" and won't refresh.
+Or run it without installing:
+
+```bash
+npx manifast
+```
+
+> **Building from source?** See [CLAUDE.md](CLAUDE.md) — clone, `npm install`,
+> `npm run build`, then `npm install -g .` (bump `version` first; the **same**
+> version reports "up to date" and won't refresh).
 
 ## Quick start
 
@@ -62,6 +78,7 @@ refreshes in ~300 ms — no full page reload.
 | `manifast` | Start the server for the current folder and open the browser |
 | `manifast <dir>` | Use `<dir>` (or `<dir>/.manifast`) as the workspace |
 | `manifast init [dir]` | Scaffold `.manifast/` + install the skill (never overwrites) |
+| `manifast validate [dir]` | Check the workspace against the schemas + links; exits 1 on errors (`--strict` also fails on warnings) |
 | `manifast --port <n>` | Use a specific port (default 4317; next free port if taken) |
 | `manifast --no-open` | Don't open the browser |
 | `manifast --help` / `--version` | Help / version |

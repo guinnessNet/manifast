@@ -15,7 +15,6 @@ AI** (the agent analyzes; the app only renders).
 - **User-facing docs:** `README.md`
 - **Authoritative spec (v1) + change appendices:** `docs/DESIGN.md` (부록 B = v2 docs, 부록 C = v3 diagrams)
 - **Version history:** `CHANGELOG.md`
-- **Original one-shot build prompt (historical):** `docs/GOAL_PROMPT.md`
 
 ## Commands
 
@@ -83,12 +82,15 @@ and read-only. Still **no in-app AI / MCP / DB / auth.** (See DESIGN 부록 B.)
   isn't a hairball; agent-authored diagrams live in `.manifast/diagrams/*.json`.
 - Build does not typecheck; run `npm run typecheck` separately.
 
-## Release / global refresh
+## Release / refresh
 
-`manifast` is installed globally from this folder (`npm install -g .`), not
-published to npm. To ship changes: **bump `version` in package.json** → `npm run
-build` → `npm install -g .`. Same version reports "up to date" and will NOT
-refresh the global copy — always bump.
+To ship changes: **bump `version` in package.json** → `npm run build`. Then either:
+
+- **Publish to npm** — push a `v*` tag; the tag-gated CI job runs `prepublishOnly`
+  (`typecheck && check && test && build`) then `npm publish`. Or publish locally
+  with `npm publish` after `npm login`.
+- **Refresh the local global install** — `npm install -g .`. Installing the **same**
+  version reports "up to date" and will NOT refresh — always bump first.
 
 ## Verifying real behavior
 

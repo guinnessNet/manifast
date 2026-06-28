@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import open from "open";
 import { createServer } from "../server/index";
 import { runInit } from "./init";
+import { validateWorkspace } from "./validate";
 import pkg from "../../package.json";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -20,11 +21,13 @@ const HELP = `
   Usage:
     manifast [dir]          start the server for <dir> (or cwd) and open browser
     manifast init [dir]     scaffold .manifast/ and install the agent skill
+    manifast validate [dir] check the workspace against the schemas (exit 1 on errors)
     manifast --help         show this help
 
   Options:
     -p, --port <n>          port (default 4317; next free port if taken)
         --no-open           do not open the browser
+        --strict            (validate) treat warnings as failures too
     -h, --help              show help
     -v, --version           print version
 
@@ -53,6 +56,46 @@ async function cmdInit(input?: string): Promise<void> {
   console.log(`\n  Done. Next:`);
   console.log(`    1. Ask Claude Code / Codex to design wireframes & docs (it will read the skill).`);
   console.log(`    2. Run \`npx manifast\` to view them live.\n`);
+}
+
+async function cmdValidate(input: string | undefined, strict: boolean): Promise<void> {
+  const { projectDir, manifastDir } = resolveWorkspace(input);
+  if (!existsSync(manifastDir)) {
+    console.error(`\n  ⚠ No .manifast/ found at ${manifastDir}\n`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const report = await validateWorkspace(manifastDir, projectDir);
+  const errors = report.issues.filter((i) => i.level === "error");
+  const warnings = report.issues.filter((i) => i.level === "warning");
+  const c = report.counts;
+
+  console.log(`\n  Validating ${manifastDir}`);
+  console.log(
+    `  (${c.wireframes} wireframes · ${c.docs} docs · ${c.tasks} tasks · ${c.diagrams} diagrams · ${c.phases} phases)\n`,
+  );
+
+  if (errors.length) {
+    console.log(`  ✖ ${errors.length} error${errors.length > 1 ? "s" : ""}`);
+    for (const e of errors) console.log(`    ${e.path}\n      ${e.message}`);
+    console.log("");
+  }
+  if (warnings.length) {
+    console.log(`  ⚠ ${warnings.length} warning${warnings.length > 1 ? "s" : ""}`);
+    for (const w of warnings) console.log(`    ${w.path}\n      ${w.message}`);
+    console.log("");
+  }
+
+  const fail = errors.length > 0 || (strict && warnings.length > 0);
+  if (fail) {
+    console.log(`  FAIL — ${errors.length} error(s), ${warnings.length} warning(s)\n`);
+    process.exitCode = 1;
+  } else if (warnings.length) {
+    console.log(`  OK with ${warnings.length} warning(s) (use --strict to fail on warnings)\n`);
+  } else {
+    console.log(`  ✓ valid — no issues\n`);
+  }
 }
 
 async function cmdStart(input: string | undefined, port: number, doOpen: boolean): Promise<void> {
@@ -103,7 +146,7 @@ async function cmdStart(input: string | undefined, port: number, doOpen: boolean
 
 async function main(): Promise<void> {
   const argv = mri(process.argv.slice(2), {
-    boolean: ["open", "help", "version"],
+    boolean: ["open", "help", "version", "strict"],
     alias: { h: "help", v: "version", p: "port" },
     default: { open: true },
   });
@@ -122,6 +165,11 @@ async function main(): Promise<void> {
 
   if (cmd === "init") {
     await cmdInit(rest[0]);
+    return;
+  }
+
+  if (cmd === "validate") {
+    await cmdValidate(rest[0], Boolean(argv.strict));
     return;
   }
 

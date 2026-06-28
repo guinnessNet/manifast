@@ -12,6 +12,10 @@ write product docs, create/modify the files described here. Keep every file a
 shows a red error banner for any file it can't parse, but keeps rendering the
 rest.
 
+**After authoring or editing, run `npx manifast validate`** (`--strict` also fails
+on warnings). It re-checks every file against these schemas plus cross-references
+(links, ids) and exits non-zero on any error — if it fails, you are not done.
+
 ## 0. 두 작업 모드
 
 **모드 A — 기존 문서 구조화** (프로젝트에 `docs/`가 이미 쌓여 있을 때). 흩어진 문서를 읽고
@@ -223,8 +227,9 @@ coordinates) and renders it in the **Map** view.
   "schema": "manifast.diagram/1",
   "id": "arch",
   "title": "System architecture",
-  "kind": "architecture",        // architecture | docmap | flow | ...
-  "direction": "LR",             // TB | LR | BT | RL (optional)
+  "kind": "architecture",        // architecture | docmap | sitemap | flow | ...
+  "layout": "layered",           // layered | radial | tree (optional — inferred from kind)
+  "direction": "LR",             // TB | LR | BT | RL (optional; used by layered/tree)
   "groups": [{ "id": "api", "label": "API" }],
   "nodes": [
     { "id": "server", "label": "API server", "group": "api", "kind": "service" },
@@ -234,10 +239,44 @@ coordinates) and renders it in the **Map** view.
 }
 ```
 
+**Pick the layout to match the content's shape — this is the #1 lever on readability.**
+The app renders three strategies; set `layout` explicitly, or let it be inferred from `kind`:
+
+| content shape | `layout` | `kind` that infers it | looks like |
+|---|---|---|---|
+| **document/feature relationships** (many-to-many cross-refs) | `radial` | `docmap` · `mindmap` · `relations` | **mind map** — a hub at center, related nodes on rings outward |
+| **sitemap / feature tree** (single-parent hierarchy) | `tree` | `sitemap` · `tree` · `hierarchy` | top-down tidy tree (use feature-tree node kinds, below) |
+| **user flow / screen flow** (start → page → action → decision) | `layered` | `flow` · `userflow` | a **flow**: typed nodes + arrowed, labelled edges. Gets its own **User Flow** tab |
+| **backend / architecture / dataflow** (directional tiers) | `layered` | `architecture` · everything else | dagre lanes, `groups` as tiers, follows `direction` |
+
+Rules of thumb:
+- **Relationships → `radial`, NOT layered.** A doc/concept map forced through layered dagre
+  reads as a meaningless left-right flow. Radial picks the highest-degree node as the hub;
+  author so the *intended* center is the most-connected node. `groups` are not drawn in radial
+  (a mind map is hub-centric) — rely on `node.kind` tints instead.
+- **Architecture/backend → `layered`** with `groups` as tiers (e.g. `ui` / `api` / `data`) and a
+  consistent `direction`. This is the one case dagre is right for.
+- **Keep a hand-authored diagram focused (≤ ~25 nodes).** Big graphs are for the auto map, which
+  aggregates (below). If you need more, split into several diagrams or use groups as tiers.
+
+- **User flow** (`kind: "flow"`) — model a screen/process flow as directed, **labelled** edges
+  (`label: "로그인 클릭"`, `"예"`, `"아니오"`). Give nodes a typed `kind` so they render distinctly:
+  `start` / `end` (green/red **pills**), `page` (a screen — add `ref: { kind: "wireframe", id }`
+  so it clicks through), `action` (a user action), `decision` (a branch). Set `direction` (`TB`
+  top-down or `LR` left-right). These appear in the dedicated **User Flow** tab. See
+  `examples/.manifast/diagrams/user-flow.json`.
+- **Feature tree** (`kind: "tree"`) — model `project → requirement → feature → detail` as
+  parent→child edges; tag nodes with those kinds for per-level color, and put the 1–3 line intent
+  in `node.description`. Renders top-down in the dedicated **Tree** tab. See
+  `examples/.manifast/diagrams/feature-tree.json`.
+
 - Analyze the real project (folders, modules, imports/deps, entry points — and the
   root `CLAUDE.md` / `AGENTS.md` / `README.md`, which Manifast now also shows) and
   emit nodes + edges. Don't compute positions; the app handles layout.
-- `node.kind` (module|service|layer|db|external|doc|…) just tints the box; `edge.kind`는
+- `node.kind` gives a node its visual: architecture `module|service|layer|db|external|folder`
+  (subtle left-border hue); user-flow `start|page|action|decision|end` and feature-tree
+  `project|requirement|feature|detail` render as typed filled nodes (terminators as pills);
+  anything else is a neutral box. `edge.kind`는
   자유 형식이지만 **아래 권장 어휘를 우선 사용**하고 맞는 게 없으면 `other`를 쓴다:
   `implements` · `supersedes` · `references` · `plans-for` · `results` · `includes` ·
   `uses` · `produces` · `rollup` · `absorbed-by` · `next` · `sibling`.
@@ -248,7 +287,12 @@ coordinates) and renders it in the **Map** view.
   ref is cleaner.)
 - Set `generatedAt` when you (re)generate it. Don't leave half the nodes edgeless — add
   `relates`/`supersedes` edges or rely on groups so the map reads as structure, not a list.
-  Manifast also shows an **auto** project map (doc↔wireframe↔task↔plan links) with no file needed.
+- Manifast also shows an **auto** project map (doc↔wireframe↔task↔plan links) with no file
+  needed. It is `docmap` (renders radial). **At scale (40+ docs) it aggregates by default** —
+  docs collapse into `dir:<folder>` super-nodes (with counts) and tasks into their plan phase,
+  so it reads as a ~dozen-node structure overview instead of a hairball. The Map toolbar has
+  **개별 문서 펼치기 / 폴더로 집계** to toggle, plus **focus** (click a node → its neighborhood)
+  for drill-down. So you do not need to hand-author a diagram just to see project structure.
 
 ## 6. Links (single source of truth — no duplication)
 
