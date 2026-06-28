@@ -25,9 +25,11 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 - **Security hardening.** File access resolves realpaths so a symlink/junction
   inside the workspace can't escape the project root — both on the read/write
   endpoints (`/api/raw`, `/api/file`, doc writes) and during workspace discovery
-  — including the manifest read and the file-export listing, so even a `.manifast`
-  directory that is itself a junction can't leak an outside project name or file
-  names. Every request must
+  — including the manifest read, the file-export listing, and the **watcher
+  roots**, so even a `.manifast` directory that is itself a junction can't leak
+  an outside project name / file names, get its external changes broadcast over
+  the live-reload WS, or send the export walker into an outside tree. Every
+  request must
   carry a local `Host` (DNS-rebinding defense, GET included) and state-changing
   POSTs / `/ws` upgrades a local `Origin` (CSRF). Bumped `@fastify/static` to
   `^9.1.3` (path-traversal advisories).

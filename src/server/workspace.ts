@@ -448,12 +448,17 @@ export async function resolveWatchRoots(
 ): Promise<{ dirs: string[]; files: string[] }> {
   const { sources } = await readManifest(manifastDir, projectDir);
   const entries = sources?.docs ?? DEFAULT_DOC_SOURCES;
-  const dirs = new Set<string>([manifastDir]);
+  // Only watch roots that stay inside the project root once symlinks/junctions
+  // are resolved — otherwise a `.manifast` (or source dir) junction would make
+  // the watcher follow it and broadcast outside file changes over the WS.
+  const dirs = new Set<string>();
+  if (isConfined(projectDir, manifastDir)) dirs.add(manifastDir);
   const files = new Set<string>();
   for (const entry of entries) {
     const abs = path.resolve(projectDir, entry);
     if (!within(projectDir, abs)) continue;
     if (within(manifastDir, abs)) continue; // already covered
+    if (!isConfined(projectDir, abs)) continue;
     const st = await stat(abs).catch(() => null);
     if (st?.isDirectory()) dirs.add(abs);
     else if (st?.isFile()) files.add(abs);
@@ -639,11 +644,12 @@ export async function listAllFiles(manifastDir: string, projectDir: string): Pro
     for (const e of entries) {
       if (e.name.startsWith(".")) continue;
       const abs = path.join(dir, e.name);
-      if (e.isDirectory()) await walk(abs);
       // Skip anything that escapes the project root once symlinks/junctions are
-      // resolved, so a `.manifast` (or sub-dir) junction can't leak outside
-      // file names into the export listing.
-      else if (e.isFile() && isConfined(projectDir, abs)) out.push(toPosix(path.relative(projectDir, abs)));
+      // resolved, so a `.manifast` (or sub-dir) junction can't leak outside file
+      // names — or send us walking an external tree — via the export listing.
+      if (!isConfined(projectDir, abs)) continue;
+      if (e.isDirectory()) await walk(abs);
+      else if (e.isFile()) out.push(toPosix(path.relative(projectDir, abs)));
     }
   }
   try {

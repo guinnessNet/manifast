@@ -3,7 +3,7 @@ import path from "node:path";
 import { readFile, writeFile, symlink, rm, mkdir } from "node:fs/promises";
 import matter from "gray-matter";
 import { buildApp, type BuiltApp } from "../src/server/index";
-import { readWorkspace, listAllFiles } from "../src/server/workspace";
+import { readWorkspace, listAllFiles, resolveWatchRoots } from "../src/server/workspace";
 import { makeTempProject, writeFixture } from "./helpers";
 
 let dir: string;
@@ -169,6 +169,11 @@ describe("junction confinement (.manifast itself escaping the root)", () => {
     expect(ws.project.name).not.toBe("SECRET-PROJECT");
     const files = await listAllFiles(link, proj);
     expect(files.some((f) => f.includes("secret.json"))).toBe(false);
+
+    // The watcher must not follow the junction outside the root either, or it
+    // would broadcast external file changes over the WS.
+    const roots = await resolveWatchRoots(link, proj);
+    expect(roots.dirs).not.toContain(link);
 
     await rm(outside, { recursive: true, force: true });
     await rm(proj, { recursive: true, force: true });
