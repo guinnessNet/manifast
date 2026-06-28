@@ -160,6 +160,24 @@ describe("origin gate (CSRF / DNS-rebinding defense)", () => {
     });
     expect(res.json().ok).toBe(true);
   });
+
+  it("rejects any request with a non-local Host (DNS-rebinding defense)", async () => {
+    const res = await built.app.inject({
+      method: "GET",
+      url: "/api/raw?path=docs/guide.md",
+      headers: { host: "attacker.example" },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("allows a request with a localhost Host", async () => {
+    const res = await built.app.inject({
+      method: "GET",
+      url: "/api/raw?path=docs/guide.md",
+      headers: { host: "127.0.0.1:4317" },
+    });
+    expect(res.statusCode).toBe(200);
+  });
 });
 
 describe("POST /api/doc/* (the only writer)", () => {

@@ -61,16 +61,31 @@ const CONTENT_TYPES: Record<string, string> = {
   ".md": "text/markdown; charset=utf-8",
 };
 
+function isLocalHostname(host: string): boolean {
+  const h = host.replace(/^\[|\]$/g, "");
+  return h === "localhost" || h === "127.0.0.1" || h === "::1";
+}
+
 /**
- * Reject browser requests from a non-local Origin (DNS-rebinding / CSRF defense
- * for this localhost-only tool). Non-browser clients (curl, the SSR check) send
- * no Origin and are allowed.
+ * Reject requests addressed to a non-local Host (DNS-rebinding defense: a
+ * rebound attacker domain becomes "same-origin" to localhost and could read GET
+ * responses). Applied to every request — GET included. A missing Host header
+ * (non-HTTP/1.1 clients) is allowed; browsers always send one.
+ */
+function isLocalHost(hostHeader: string | undefined): boolean {
+  if (!hostHeader) return true;
+  return isLocalHostname(hostHeader.replace(/:\d+$/, ""));
+}
+
+/**
+ * Reject browser requests from a non-local Origin (CSRF defense for this
+ * localhost-only tool). Non-browser clients (curl, the SSR check) send no Origin
+ * and are allowed.
  */
 function isLocalOrigin(origin: string | undefined): boolean {
   if (!origin) return true;
   try {
-    const host = new URL(origin).hostname.replace(/^\[|\]$/g, "");
-    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+    return isLocalHostname(new URL(origin).hostname);
   } catch {
     return false;
   }
@@ -93,8 +108,12 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
 
   const sockets = new Set<WsClient>();
 
-  // Reject state-changing requests carrying a non-local browser Origin.
   app.addHook("onRequest", async (req, reply) => {
+    // DNS-rebinding defense — only serve requests addressed to a local Host.
+    if (!isLocalHost(req.headers.host)) {
+      return reply.code(403).send({ ok: false, error: "non-local host 거부됨" });
+    }
+    // CSRF defense — reject state-changing requests from a non-local Origin.
     if (req.method === "POST" && !isLocalOrigin(req.headers.origin)) {
       return reply.code(403).send({ ok: false, error: "cross-origin 요청 거부됨" });
     }

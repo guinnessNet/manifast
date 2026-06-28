@@ -36,8 +36,17 @@ export function confine(root: string, rel: string): string | null {
   if (!rel) return null;
   const abs = path.resolve(root, rel);
   if (!within(root, abs)) return null;
+  return isConfined(root, abs) ? abs : null;
+}
+
+/**
+ * True when the absolute path `abs` stays inside `root` after resolving symlinks
+ * on both sides. Use this to confine *discovered* paths (directory listings,
+ * walked files) so a junction/symlink at a top-level source dir can't pull
+ * outside files (or their metadata) into the workspace.
+ */
+export function isConfined(root: string, abs: string): boolean {
   const realRoot = realOrNearest(path.resolve(root));
-  const realTarget = realOrNearest(abs);
-  if (!within(realRoot, realTarget)) return null;
-  return abs;
+  const realTarget = realOrNearest(path.resolve(abs));
+  return within(realRoot, realTarget);
 }

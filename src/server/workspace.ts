@@ -3,7 +3,7 @@ import type { Stats } from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
-import { confine } from "./safePath";
+import { confine, isConfined } from "./safePath";
 import {
   WireframeSchema,
   TasksFileSchema,
@@ -519,13 +519,22 @@ async function readDiagramMeta(manifastDir: string, file: string): Promise<Diagr
 
 export async function readWorkspace(manifastDir: string, projectDir: string): Promise<WorkspaceDTO> {
   const config = await readManifest(manifastDir, projectDir);
-  const [wfFiles, diagFiles, docs, tasks, plan] = await Promise.all([
-    listFiles(path.join(manifastDir, "wireframes"), ".json"),
-    listFiles(path.join(manifastDir, "diagrams"), ".json"),
-    discoverDocs(projectDir, config.sources),
+  const wfDir = path.join(manifastDir, "wireframes");
+  const diagDir = path.join(manifastDir, "diagrams");
+  // Drop anything that escapes the project root once symlinks/junctions are
+  // resolved, so a junction at a source dir can't leak outside files (or their
+  // id/title metadata) into the workspace snapshot.
+  const [wfFiles, diagFiles, docs, tasksRaw, planRaw] = await Promise.all([
+    listFiles(wfDir, ".json").then((fs) => fs.filter((f) => isConfined(projectDir, path.join(wfDir, f)))),
+    listFiles(diagDir, ".json").then((fs) => fs.filter((f) => isConfined(projectDir, path.join(diagDir, f)))),
+    discoverDocs(projectDir, config.sources).then((ds) =>
+      ds.filter((d) => isConfined(projectDir, path.join(projectDir, d.path))),
+    ),
     readTasks(manifastDir),
     readPlan(manifastDir),
   ]);
+  const tasks = tasksRaw && isConfined(projectDir, path.join(manifastDir, "tasks")) ? tasksRaw : null;
+  const plan = planRaw && isConfined(projectDir, path.join(manifastDir, "plan")) ? planRaw : null;
 
   const [wireframes, diagrams] = await Promise.all([
     Promise.all(wfFiles.map((f) => readWireframeMeta(manifastDir, f))),
