@@ -8,21 +8,26 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 
 - **New `manifast validate [dir]` command.** Re-parses the workspace through the
   same zod schemas the app uses and checks cross-references (broken
-  spec→wireframe/tasks links, doc `related`, task `specId`/`wireframeId`/`deps`,
-  plan `taskIds`) plus duplicate ids, exiting non-zero on any error (`--strict`
-  also fails on warnings). An **LLM-agnostic gate**: any agent can author the
-  files, but bad output fails loudly instead of being silently ingested.
+  spec→wireframe/tasks links, doc `related`/`deprecatedBy`, task
+  `specId`/`wireframeId`/`deps`, plan `taskIds`, and diagram edge endpoints /
+  `node.ref` / `node.group`) plus duplicate ids, exiting non-zero on any error
+  (`--strict` also fails on warnings). Each problem is reported once at the right
+  level (schema failures = errors, inferrable doc-id clashes / frontmatter
+  warnings = warnings). An **LLM-agnostic gate**: any agent can author the files,
+  but bad output fails loudly instead of being silently ingested.
 - **Authoring guide is now installed at an LLM-neutral path.** `manifast init`
   always writes the full guide to `.manifast/AGENTS.md` (previously only the
   root `AGENTS.md`, which is skipped when the project already has its own), and
   the durable directive points **every** agent there + tells it to run
   `manifast validate`. Fixes the case where a project's own `AGENTS.md` left
   Codex/other tools without the schema.
-- **Security hardening.** File access now resolves realpaths so a symlink inside
-  the workspace can't escape the project root (`/api/raw`, `/api/file`, doc
-  writes); state-changing POSTs and `/ws` upgrades from a non-local Origin are
-  rejected (CSRF / DNS-rebinding defense for this localhost tool). Bumped
-  `@fastify/static` to `^9.1.3` (path-traversal advisories).
+- **Security hardening.** File access resolves realpaths so a symlink/junction
+  inside the workspace can't escape the project root — both on the read/write
+  endpoints (`/api/raw`, `/api/file`, doc writes) and during workspace discovery
+  (so a junctioned source dir can't leak outside metadata). Every request must
+  carry a local `Host` (DNS-rebinding defense, GET included) and state-changing
+  POSTs / `/ws` upgrades a local `Origin` (CSRF). Bumped `@fastify/static` to
+  `^9.1.3` (path-traversal advisories).
 
 ## 1.2.0 — user-flow & feature-tree views (2026-06-26)
 
