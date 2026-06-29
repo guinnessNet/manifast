@@ -2,6 +2,8 @@
 
 **A local, read-only visualizer for AI-authored wireframes and dev docs.**
 
+![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
+
 > v1.2.1 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
