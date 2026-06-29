@@ -4,7 +4,7 @@
 
 ![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
 
-> v1.2.2 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
+> v1.2.3 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
 
 **How it works:** an AI coding agent ([Claude Code](https://www.claude.com/product/claude-code)
 or [Codex](https://developers.openai.com/codex/cli/)) writes structured files into a
@@ -127,6 +127,18 @@ AGENTS.md / CLAUDE.md              # managed Manifast directive block, preservin
 
 User-owned text is preserved; Manifast-managed files are refreshed when the
 bundled guide/schema changes. Re-running `init` is safe.
+
+## Troubleshooting
+
+- **The views are empty.** Manifast only renders what an agent has written into
+  `.manifast/`; until then the views are blank — that's expected, not a bug. Run
+  `manifast init --example` to load a demo workspace, or ask your agent to author
+  something.
+- **Port 4317 is already in use.** Manifast automatically falls back to the next
+  free port — check the `manifast running → …` line for the actual URL, or pick
+  one with `manifast --port 5000`.
+- **`manifast: command not found`.** The global install isn't on your `PATH` —
+  re-run `npm install -g manifast`, or just use `npx manifast` (no install needed).
 
 ## The views
 

@@ -4,6 +4,14 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
+## 1.2.3 — README troubleshooting + CI auto-publish (2026-06-30)
+
+- **README troubleshooting section** for the three most common newcomer snags:
+  empty views (expected until an agent authors files), port 4317 in use (auto
+  next-free port), and `command not found` (PATH / use `npx`).
+- First release published via the **tag-gated CI pipeline** (bypass-2FA
+  `NPM_TOKEN`) rather than a local `npm publish`.
+
 ## 1.2.2 — demo workspace + newcomer-friendly README (2026-06-30)
 
 - **`manifast init --example`** seeds a small demo `.manifast/` (wireframes, PRD,
