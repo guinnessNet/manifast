@@ -24,7 +24,7 @@
 
 ### 0.2 In Scope (v1)
 1. `npx manifast` CLI: 로컬 서버 기동 + 브라우저 오픈.
-2. `manifast init`: 프로젝트에 `.manifast/` 스캐폴드 + **Manifast-managed 가이드/스키마 설치·갱신**(Claude Code skill, `.manifast/AGENTS.md`, JSON Schema, 루트 `CLAUDE.md`/`AGENTS.md` 지시 블록). 예제 파일은 현재 시딩하지 않는다.
+2. `manifast init`: 프로젝트에 `.manifast/` 스캐폴드 + **Manifast-managed 가이드/스키마 설치·갱신**(Claude Code skill, `.manifast/AGENTS.md`, JSON Schema, 루트 `CLAUDE.md`/`AGENTS.md` 지시 블록). 예제는 기본 미시딩 — `--example`로 데모 워크스페이스 시드(기존 파일 미덮어씀), `--rm-example`로 수정 안 된 데모만 제거.
 3. `.manifast/` 폴더를 **폴더 규약**으로 발견·파싱·검증.
 4. 핵심 뷰: **와이어프레임**(캔버스, 저충실도 렌더), **문서**(PRD/스펙 Markdown), **태스크 보드**(칸반), **플랜/로드맵**. v2/v3 부록에서 **Map/User Flow/Tree** 뷰가 추가된다.
 5. **라이브 리로드**: 파일 변경 감지 → 브라우저 자동 갱신.
@@ -450,7 +450,9 @@ manifast/
 |---|---|
 | `npx manifast` | cwd에서 `.manifast/` 찾아 서버 기동(포트 4317, 사용 중이면 +1 탐색), 브라우저 오픈 |
 | `npx manifast <dir>` | `<dir>`(또는 `<dir>/.manifast`)을 워크스페이스로 |
-| `npx manifast init` | `.manifast/` 스캐폴드 + Manifast-managed 가이드/스키마 설치·갱신(§7.1). 사용자 콘텐츠는 보존하고 예제 파일은 시딩하지 않음 |
+| `npx manifast init` | `.manifast/` 스캐폴드 + Manifast-managed 가이드/스키마 설치·갱신(§7.1). 사용자 콘텐츠 보존. 예제는 기본 미시딩 |
+| `npx manifast init --example` | 위 + 데모 `.manifast/` 시드(기존 파일 미덮어씀) |
+| `npx manifast init --rm-example` | 수정 안 된 데모 파일만 제거(편집/추가분 보존) |
 | `npx manifast --port <n>` | 포트 지정 |
 | `npx manifast --no-open` | 브라우저 자동 오픈 끔 |
 

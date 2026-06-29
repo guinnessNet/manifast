@@ -4,6 +4,21 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
+## 1.2.2 — demo workspace + newcomer-friendly README (2026-06-30)
+
+- **`manifast init --example`** seeds a small demo `.manifast/` (wireframes, PRD,
+  specs, tasks, plan, diagrams) so all views are populated before an agent has
+  authored anything — handy for a first look without setting up an agent. It
+  **never overwrites** an existing file.
+- **`manifast init --rm-example`** removes the seeded demo, but only files whose
+  content still matches the seed verbatim — anything you edited or added is kept.
+- **README clarity pass.** Added a 3-line "How it works" mental model, an explicit
+  "you need an AI coding agent (Claude Code / Codex)" prerequisite with links, an
+  empty-state note (views are empty until the agent writes files), documented the
+  new demo flags, switched internal doc links (`CHANGELOG`/`CLAUDE`/`DESIGN`) to
+  absolute GitHub URLs so they resolve on the npm page, and replaced the Korean
+  "부록 B" with "Appendix B".
+
 ## 1.2.1 — `manifast validate` + LLM-agnostic guide + security hardening (2026-06-28)
 
 - **New `manifast validate [dir]` command.** Re-parses the workspace through the

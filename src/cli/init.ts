@@ -1,11 +1,19 @@
-import { mkdir, readdir, access, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, access, readFile, writeFile, rm } from "node:fs/promises";
 import path from "node:path";
 
 export interface InitReport {
   created: string[];
   updated: string[];
   skipped: string[];
+  removed: string[];
 }
+
+function emptyReport(): InitReport {
+  return { created: [], updated: [], skipped: [], removed: [] };
+}
+
+const sameContent = (a: string, b: string) =>
+  a.replace(/\r\n/g, "\n") === b.replace(/\r\n/g, "\n");
 
 async function exists(p: string): Promise<boolean> {
   try {
@@ -74,6 +82,83 @@ async function copyTreeRefresh(srcDir: string, destDir: string, relBase: string,
     if (e.isDirectory()) await copyTreeRefresh(s, d, rel, report);
     else if (e.isFile()) await copyFileRefresh(s, d, rel, report);
   }
+}
+
+
+// --- Demo example content (`init --example` / `init --rm-example`) ----------
+// A small sample `.manifast/` workspace so the views aren't empty before an
+// agent has authored anything. Seeding NEVER overwrites an existing file (your
+// own work is safe); removal deletes ONLY files that still match the seed
+// verbatim, so anything you edited or added is preserved.
+
+function exampleSrcDir(skillDir: string): string {
+  return path.join(skillDir, "examples", ".manifast");
+}
+
+// Copy each example file into the workspace only if absent (create-only).
+async function seedTree(srcDir: string, destDir: string, relBase: string, report: InitReport): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(srcDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const s = path.join(srcDir, e.name);
+    const d = path.join(destDir, e.name);
+    const rel = relBase ? `${relBase}/${e.name}` : e.name;
+    if (e.isDirectory()) {
+      await seedTree(s, d, rel, report);
+    } else if (e.isFile()) {
+      if (await exists(d)) {
+        report.skipped.push(`${rel} (exists)`);
+        continue;
+      }
+      await ensureDir(path.dirname(d));
+      await writeFile(d, await readFile(s, "utf8"), "utf8");
+      report.created.push(rel);
+    }
+  }
+}
+
+// Delete example files only where the on-disk content still matches the seed.
+async function removeTree(srcDir: string, destDir: string, relBase: string, report: InitReport): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(srcDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const e of entries) {
+    const s = path.join(srcDir, e.name);
+    const d = path.join(destDir, e.name);
+    const rel = relBase ? `${relBase}/${e.name}` : e.name;
+    if (e.isDirectory()) {
+      await removeTree(s, d, rel, report);
+      continue;
+    }
+    if (!e.isFile()) continue;
+    let destContent: string;
+    try {
+      destContent = await readFile(d, "utf8");
+    } catch {
+      continue; // not present — nothing to remove
+    }
+    const srcContent = await readFile(s, "utf8");
+    if (sameContent(destContent, srcContent)) {
+      await rm(d, { force: true });
+      report.removed.push(rel);
+    } else {
+      report.skipped.push(`${rel} (modified — kept)`);
+    }
+  }
+}
+
+/** Remove unmodified seeded example files. Anything you changed is left alone. */
+export async function removeExamples(manifastDir: string, skillDir: string): Promise<InitReport> {
+  const report = emptyReport();
+  await removeTree(exampleSrcDir(skillDir), manifastDir, ".manifast", report);
+  return report;
 }
 
 
@@ -155,8 +240,9 @@ export async function runInit(
   projectDir: string,
   manifastDir: string,
   skillDir: string,
+  opts: { example?: boolean } = {},
 ): Promise<InitReport> {
-  const report: InitReport = { created: [], updated: [], skipped: [] };
+  const report = emptyReport();
 
   // 1. Scaffold folder structure.
   for (const f of ["wireframes", "prd", "specs", "tasks", "plan", "diagrams", "schema"]) {
@@ -230,6 +316,13 @@ export async function runInit(
       `.claude/skills/${skill}/SKILL.md`,
       report,
     );
+  }
+
+  // 8. Optional demo content so the views aren't empty before an agent authors
+  //    anything. Never overwrites an existing file; remove later with
+  //    `manifast init --rm-example`.
+  if (opts.example) {
+    await seedTree(exampleSrcDir(skillDir), manifastDir, ".manifast", report);
   }
 
   return report;

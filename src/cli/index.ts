@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { existsSync } from "node:fs";
 import open from "open";
 import { createServer } from "../server/index";
-import { runInit } from "./init";
+import { runInit, removeExamples } from "./init";
 import { validateWorkspace } from "./validate";
 import pkg from "../../package.json";
 
@@ -20,13 +20,15 @@ const HELP = `
 
   Usage:
     manifast [dir]          start the server for <dir> (or cwd) and open browser
-    manifast init [dir]     scaffold .manifast/ and install the agent skill
+    manifast init [dir]     scaffold .manifast/ and install the agent guide
     manifast validate [dir] check the workspace against the schemas (exit 1 on errors)
     manifast --help         show this help
 
   Options:
     -p, --port <n>          port (default 4317; next free port if taken)
         --no-open           do not open the browser
+        --example           (init) also seed demo content so the views aren't empty
+        --rm-example        (init) remove unmodified seeded demo content
         --strict            (validate) treat warnings as failures too
     -h, --help              show help
     -v, --version           print version
@@ -42,10 +44,22 @@ function resolveWorkspace(input?: string): { projectDir: string; manifastDir: st
   return { projectDir: base, manifastDir: path.join(base, ".manifast") };
 }
 
-async function cmdInit(input?: string): Promise<void> {
+async function cmdInit(input: string | undefined, opts: { example: boolean; rmExample: boolean }): Promise<void> {
   const { projectDir, manifastDir } = resolveWorkspace(input);
+
+  if (opts.rmExample) {
+    console.log(`\n  Removing seeded demo content from ${manifastDir}\n`);
+    const report = await removeExamples(manifastDir, skillDir);
+    for (const r of report.removed) console.log(`  - ${r}`);
+    for (const s of report.skipped) console.log(`  · ${s}`);
+    if (report.removed.length === 0)
+      console.log("  (no unmodified demo files found — nothing removed)");
+    console.log("");
+    return;
+  }
+
   console.log(`\n  Initializing manifast in ${projectDir}\n`);
-  const report = await runInit(projectDir, manifastDir, skillDir);
+  const report = await runInit(projectDir, manifastDir, skillDir, { example: opts.example });
 
   for (const c of report.created) console.log(`  + ${c}`);
   for (const u of report.updated) console.log(`  ~ ${u}`);
@@ -54,8 +68,15 @@ async function cmdInit(input?: string): Promise<void> {
     console.log("  (nothing new — everything already present)");
 
   console.log(`\n  Done. Next:`);
-  console.log(`    1. Ask Claude Code / Codex to design wireframes & docs (it will read the skill).`);
-  console.log(`    2. Run \`npx manifast\` to view them live.\n`);
+  if (opts.example) {
+    console.log(`    1. Run \`npx manifast\` to view the demo workspace live.`);
+    console.log(`    2. Ask Claude Code / Codex to author your own (it will read the guide).`);
+    console.log(`    3. Clear the demo any time with \`manifast init --rm-example\`.\n`);
+  } else {
+    console.log(`    1. Ask Claude Code / Codex to design wireframes & docs (it will read the guide).`);
+    console.log(`       (or run \`manifast init --example\` to load a demo workspace first.)`);
+    console.log(`    2. Run \`npx manifast\` to view them live.\n`);
+  }
 }
 
 async function cmdValidate(input: string | undefined, strict: boolean): Promise<void> {
@@ -146,7 +167,7 @@ async function cmdStart(input: string | undefined, port: number, doOpen: boolean
 
 async function main(): Promise<void> {
   const argv = mri(process.argv.slice(2), {
-    boolean: ["open", "help", "version", "strict"],
+    boolean: ["open", "help", "version", "strict", "example", "rm-example"],
     alias: { h: "help", v: "version", p: "port" },
     default: { open: true },
   });
@@ -164,7 +185,7 @@ async function main(): Promise<void> {
   const [cmd, ...rest] = argv._;
 
   if (cmd === "init") {
-    await cmdInit(rest[0]);
+    await cmdInit(rest[0], { example: Boolean(argv.example), rmExample: Boolean(argv["rm-example"]) });
     return;
   }
 

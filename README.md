@@ -4,7 +4,14 @@
 
 ![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
 
-> v1.2.1 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
+> v1.2.2 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
+
+**How it works:** an AI coding agent ([Claude Code](https://www.claude.com/product/claude-code)
+or [Codex](https://developers.openai.com/codex/cli/)) writes structured files into a
+`.manifast/` folder → Manifast renders them as live views in your browser → edit (or let
+the agent edit) and the view live-reloads. **The agent authors; the app only
+visualizes — it never calls an AI itself.** You need one of those agents to author
+content, but Manifast itself is just a local viewer.
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
 JSON, PRD/spec Markdown, task/plan JSON, and diagram JSON). Manifast renders them
@@ -53,20 +60,27 @@ Or run it without installing:
 npx manifast
 ```
 
-> **Building from source?** See [CLAUDE.md](CLAUDE.md) — clone, `npm install`,
+> **Building from source?** See [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md) — clone, `npm install`,
 > `npm run build`, then `npm install -g .` (bump `version` first; the **same**
 > version reports "up to date" and won't refresh).
 
 ## Quick start
 
+> **Prerequisite:** to *author* content you need an AI coding agent installed —
+> [Claude Code](https://www.claude.com/product/claude-code) or
+> [Codex](https://developers.openai.com/codex/cli/). Manifast doesn't write content
+> for you; it visualizes what the agent writes. (Just want to look around first?
+> Skip to the demo below — no agent required.)
+
 ```bash
-# 1) In your project, scaffold .manifast/ and install the agent skill
+# 1) In your project, scaffold .manifast/ and install the agent guide
 manifast init
 
-# 2) Ask Claude Code / Codex to design something, e.g.
+# 2) In the SAME folder, open your agent (Claude Code or Codex) and ask, e.g.
 #    "Design a login + dashboard screen and write the PRD."
-#    The agent reads .manifast/AGENTS.md (Claude Code also loads the
+#    The agent auto-reads .manifast/AGENTS.md (Claude Code also loads the
 #    .claude/skills/manifast skill) and writes valid files into .manifast/.
+#    You don't copy anything in — the guide loads itself.
 
 # 3) Start the viewer (opens your browser at http://localhost:4317)
 manifast
@@ -75,6 +89,16 @@ manifast
 Edit any `.manifast/` file (or let the agent edit it) and the matching view
 refreshes in ~300 ms — no full page reload.
 
+**Just want to see it first?** Until an agent writes files, the views are empty —
+that's expected, not a bug. Load a sample workspace to explore every view right
+away (no agent needed):
+
+```bash
+manifast init --example   # seed a demo .manifast/ (never overwrites your files)
+manifast                  # explore the wireframe, docs, tasks, plan & diagram views
+manifast init --rm-example  # later: remove the demo (keeps anything you changed)
+```
+
 ## CLI
 
 | Command | Action |
@@ -82,6 +106,8 @@ refreshes in ~300 ms — no full page reload.
 | `manifast` | Start the server for the current folder and open the browser |
 | `manifast <dir>` | Use `<dir>` (or `<dir>/.manifast`) as the workspace |
 | `manifast init [dir]` | Scaffold `.manifast/` + install/refresh Manifast-managed agent guides without overwriting user content |
+| `manifast init --example` | Also seed a demo `.manifast/` workspace so the views aren't empty (never overwrites your files) |
+| `manifast init --rm-example` | Remove the seeded demo content (keeps any file you edited or added) |
 | `manifast validate [dir]` | Check the workspace against the schemas + links; exits 1 on errors (`--strict` also fails on warnings) |
 | `manifast --port <n>` | Use a specific port (default 4317; next free port if taken) |
 | `manifast --no-open` | Don't open the browser |
@@ -164,8 +190,8 @@ docs, with lifecycle tracking:
 
 This is the one place the app **writes** files — and only frontmatter
 (`uid` + status/metadata), never the document body. It's an intentional, scoped
-relaxation of v1's read-only rule (see `docs/DESIGN.md` 부록 B). Full in-app body
-editing is not included.
+relaxation of v1's read-only rule (see [DESIGN.md Appendix B](https://github.com/guinnessNet/manifast/blob/main/docs/DESIGN.md)).
+Full in-app body editing is not included.
 
 ## Maps & diagrams (v3)
 
