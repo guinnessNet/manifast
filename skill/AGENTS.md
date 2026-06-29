@@ -68,6 +68,7 @@ frontmatter `type`으로 구분하고, 필요한 것만 쓴다.
   specs/<feature-id>.md    # ONE feature spec per file
   tasks/tasks.json         # the whole task board (single file)
   plan/plan.json           # the implementation plan/roadmap (single file)
+  diagrams/<id>.json       # ONE authored diagram per file (architecture/docmap/flow/tree)
 ```
 
 Put files only in these folders — never absolute paths or arbitrary locations.

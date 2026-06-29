@@ -24,9 +24,9 @@
 
 ### 0.2 In Scope (v1)
 1. `npx manifast` CLI: 로컬 서버 기동 + 브라우저 오픈.
-2. `manifast init`: 프로젝트에 `.manifast/` 스캐폴드 + **스킬 설치**(Claude Code `SKILL.md`, Codex `AGENTS.md`, JSON Schema, 예제).
+2. `manifast init`: 프로젝트에 `.manifast/` 스캐폴드 + **Manifast-managed 가이드/스키마 설치·갱신**(Claude Code skill, `.manifast/AGENTS.md`, JSON Schema, 루트 `CLAUDE.md`/`AGENTS.md` 지시 블록). 예제 파일은 현재 시딩하지 않는다.
 3. `.manifast/` 폴더를 **폴더 규약**으로 발견·파싱·검증.
-4. 4개 뷰: **와이어프레임**(캔버스, 저충실도 렌더), **문서**(PRD/스펙 Markdown), **태스크 보드**(칸반), **플랜/로드맵**.
+4. 핵심 뷰: **와이어프레임**(캔버스, 저충실도 렌더), **문서**(PRD/스펙 Markdown), **태스크 보드**(칸반), **플랜/로드맵**. v2/v3 부록에서 **Map/User Flow/Tree** 뷰가 추가된다.
 5. **라이브 리로드**: 파일 변경 감지 → 브라우저 자동 갱신.
 6. **검증 에러 표시**: 에이전트가 잘못된 파일을 써도 빈 화면이 아니라 명확한 에러 배너.
 7. **Export**: 와이어프레임(PNG/SVG/HTML/JSON), 문서(MD/HTML), 전체(ZIP).
@@ -360,9 +360,12 @@ Export 버튼은 각 뷰 우상단 `ExportMenu`. 서버는 파일 제공만, 변
 ### 7.1 설치 위치
 ```
 <project>/.claude/skills/manifast/SKILL.md     ← Claude Code 스킬
-<project>/AGENTS.md  (또는 .manifast/INSTRUCTIONS.md)  ← Codex/범용 지침
+<project>/.claude/skills/manifast/{CHECKLIST,WORKFLOW}.md
+<project>/.claude/skills/{brainstorm,write-plan,implement}/SKILL.md
+<project>/.manifast/AGENTS.md                  ← LLM-neutral 정본 작성 가이드
 <project>/.manifast/schema/*.json              ← JSON Schema(검증 계약)
-<project>/.manifast/<예제 콘텐츠>               ← 폴더 비어있을 때만 예제 시드
+<project>/.manifast/{wireframes,prd,specs,tasks,plan,diagrams}/
+<project>/CLAUDE.md, <project>/AGENTS.md        ← managed directive block(마커 밖 사용자 텍스트 보존)
 ```
 
 ### 7.2 `SKILL.md` (Claude Code) 구성
@@ -434,7 +437,7 @@ manifast/
   skill/
     SKILL.md  AGENTS.md
     schema/                        (빌드 시 zod→json schema 생성물)
-    examples/.manifast/...         (init 시드용 예제 워크스페이스)
+    examples/.manifast/...         (dev/e2e용 예제 워크스페이스; init은 시딩하지 않음)
   dist/                           (빌드: cli + server + web)
   docs/DESIGN.md
 ```
@@ -447,11 +450,11 @@ manifast/
 |---|---|
 | `npx manifast` | cwd에서 `.manifast/` 찾아 서버 기동(포트 4317, 사용 중이면 +1 탐색), 브라우저 오픈 |
 | `npx manifast <dir>` | `<dir>`(또는 `<dir>/.manifast`)을 워크스페이스로 |
-| `npx manifast init` | `.manifast/` 스캐폴드 + 스킬 설치(§7.1). 기존 파일은 덮어쓰지 않음(예제는 폴더 비었을 때만) |
+| `npx manifast init` | `.manifast/` 스캐폴드 + Manifast-managed 가이드/스키마 설치·갱신(§7.1). 사용자 콘텐츠는 보존하고 예제 파일은 시딩하지 않음 |
 | `npx manifast --port <n>` | 포트 지정 |
 | `npx manifast --no-open` | 브라우저 자동 오픈 끔 |
 
-`init`은 기존 파일을 **절대 덮어쓰지 않는다**(존재 시 스킵 + 안내). 사용자 작업물 보호.
+`init`은 사용자 소유 텍스트와 작업물을 보존한다. Manifast-managed 파일(`.manifast/AGENTS.md`, schema, Claude skill 등)은 번들 내용이 바뀌면 갱신하고, 루트 `CLAUDE.md`/`AGENTS.md`는 마커 블록만 병합·갱신한다.
 
 ---
 
@@ -464,8 +467,8 @@ manifast/
 
 ## 12. 수용 기준 (Definition of Done)
 
-- [ ] `npx manifast init` → `.manifast/`(wireframes/prd/specs/tasks/plan/schema) 생성 + `.claude/skills/manifast/SKILL.md` + `AGENTS.md` 설치. 기존 파일 미덮어씀.
-- [ ] `npx manifast` → 4317 기동 + 브라우저 오픈. 좌측 내비에 4개 뷰.
+- [ ] `npx manifast init` → `.manifast/`(wireframes/prd/specs/tasks/plan/diagrams/schema) 생성 + `.manifast/AGENTS.md` + Claude skills + 루트 지시 블록 설치·갱신. 사용자 콘텐츠 보존.
+- [ ] `npx manifast` → 4317 기동 + 브라우저 오픈. 좌측 내비에 현재 뷰(Wireframes/Docs/Tasks/Plan/User Flow/Tree/Map).
 - [ ] 샘플 와이어프레임 JSON → 캔버스에 저충실도 렌더(팬/줌, 18종 노드 정상).
 - [ ] PRD/스펙 `.md` → frontmatter 헤더 + GFM 본문 렌더.
 - [ ] `tasks.json` → 4컬럼 칸반. `plan.json` → 단계 로드맵(진행률).
@@ -484,7 +487,7 @@ manifast/
 
 ---
 
-## 부록 A. 최소 예제 (init 시드)
+## 부록 A. 최소 예제 (작성 예시)
 
 `.manifast/wireframes/screen-login.json`
 ```json
@@ -595,8 +598,8 @@ updatedAt: 2026-06-24
 
 - **constitution 블록**: `manifast init`은 프로젝트 루트의 `CLAUDE.md`·`AGENTS.md`에
   `<!-- manifast:begin -->`…`<!-- manifast:end -->` 마커로 감싼 **관리 블록을 멱등 병합**한다
-  (있으면 갱신, 없으면 생성/append). 마커 밖 사용자 내용은 **절대 건드리지 않는다**(부록 B의
-  "기존 파일 미덮어씀" 원칙 유지·강화 — 기존 AGENTS.md를 skip하던 동작을 병합으로 대체). 블록은
+  (있으면 갱신, 없으면 생성/append). 마커 밖 사용자 내용은 **절대 건드리지 않는다**(사용자 콘텐츠
+  보존 원칙 유지·강화 — 기존 AGENTS.md를 통째로 대체하지 않고 마커 블록 병합으로 대체). 블록은
   *얇은 포인터*만 담는다: "기획·설계 산출물(와이어프레임·PRD/스펙·태스크·플랜·다이어그램·구조화
   문서)은 Manifast 스킬 규칙으로만 작성·갱신"(**범위 한정** — 코드/README 잡수정까지 강제하지 않음).
   절차 본문은 스킬에 둔다(progressive disclosure).

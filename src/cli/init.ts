@@ -147,10 +147,9 @@ async function mergeManagedBlock(
 }
 
 /**
- * Scaffold .manifast/ and install the agent skill into a project.
- * NEVER overwrites existing files (user work is protected; existing files are
- * skipped and reported). Example content is only seeded when the workspace is
- * empty.
+ * Scaffold .manifast/ and install/refresh Manifast-managed agent assets.
+ * User-owned content is preserved: managed files are refreshed, marker blocks
+ * are merged, and unmanaged root instructions keep their text outside markers.
  */
 export async function runInit(
   projectDir: string,
@@ -160,7 +159,7 @@ export async function runInit(
   const report: InitReport = { created: [], updated: [], skipped: [] };
 
   // 1. Scaffold folder structure.
-  for (const f of ["wireframes", "prd", "specs", "tasks", "plan", "schema"]) {
+  for (const f of ["wireframes", "prd", "specs", "tasks", "plan", "diagrams", "schema"]) {
     await ensureDir(path.join(manifastDir, f));
   }
 

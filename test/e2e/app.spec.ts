@@ -16,10 +16,10 @@ test.describe("Manifast SPA e2e (built app)", () => {
     await expect(page.getByText("Live", { exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
-  test("switches across all 5 views", async ({ page }) => {
+  test("switches across all views", async ({ page }) => {
     await page.goto("/");
     const nav = page.locator("aside"); // sidebar — scope away from canvas thumbnails
-    for (const label of ["Wireframes", "Docs", "Tasks", "Plan", "Map"]) {
+    for (const label of ["Wireframes", "Docs", "Tasks", "Plan", "User Flow", "Tree", "Map"]) {
       await nav.getByRole("button", { name: label }).click();
       // The header title reflects the active view.
       await expect(page.locator("header").getByText(label, { exact: true })).toBeVisible();
@@ -66,11 +66,14 @@ test.describe("Manifast SPA e2e (built app)", () => {
   test("Map shows smooth (bezier) edges + node labels", async ({ page }) => {
     await page.goto("/");
     await page.locator("aside").getByRole("button", { name: "Map" }).click();
-    // At least one routed edge is drawn as an SVG path.
-    const paths = page.locator("#mf-root svg path");
+    // The auto Project map is radial and uses straight two-point edges. Pick an
+    // authored dagre diagram so this checks the smooth routed-edge behavior.
+    await page.getByRole("combobox").selectOption({ label: "Manifast 아키텍처 · architecture" });
+    await expect(page.getByText("Server (Fastify)").first()).toBeVisible({ timeout: 10_000 });
+    const paths = page.locator("#mf-root svg path[marker-end]");
     await expect(paths.first()).toBeVisible({ timeout: 10_000 });
     // Some edge uses a cubic-bezier command (the 1.2.14 smooth-curve behavior).
-    const ds = await page.locator("#mf-root svg path").evaluateAll((els) =>
+    const ds = await paths.evaluateAll((els) =>
       els.map((e) => e.getAttribute("d") ?? ""),
     );
     expect(ds.some((d) => d.includes("C"))).toBe(true);

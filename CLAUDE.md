@@ -33,7 +33,7 @@ npm start          # node dist/cli/index.js
 
 ```
 .manifast/ + docs/ files  ──>  server (Fastify)  ──>  REST/WS  ──>  React SPA
-  (single source of truth)     discover + zod-validate            5 views + live reload
+  (single source of truth)     discover + zod-validate            7 views + live reload
 ```
 
 - `src/shared/schema/*` — **zod schemas are the single source of truth.** They
@@ -44,12 +44,12 @@ npm start          # node dist/cli/index.js
   `/api/doc/adopt|status`), `watcher.ts` (chokidar dirs + fs.watch files → WS),
   `edit.ts` (the ONLY writer: doc frontmatter uid/status only).
 - `src/cli/` — `index.ts` (start/`<dir>`/`init`/flags, mri+open), `init.ts`
-  (scaffold + skill install, never overwrites).
+  (scaffold + managed guide/schema install/refresh; preserves user content).
 - `src/web/` — Vite + React 19 + Tailwind v4. Views: `wireframe/` (canvas +
   18 inline-styled nodes + dagre-free pan/zoom), `docs/`, `tasks/`, `plan/`,
   `diagram/MapView` (dagre layout). `lib/` = api, links, graph (auto map), layout,
   export, cn, nav. Hooks: `useWorkspace`, `useLiveReload`, `useFile`.
-- `skill/` — `SKILL.md`, `AGENTS.md`, generated `schema/`, `examples/` (init seed).
+- `skill/` — `SKILL.md`, `AGENTS.md`, generated `schema/`, `examples/` (dev/e2e demo workspace; not init-seeded).
 - `scripts/` — `gen-schema.ts`, `build-server.ts` (esbuild), `dev.mjs`, `ssr-check.tsx`.
 
 ## Conventions

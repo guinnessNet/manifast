@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runInit } from "../src/cli/init";
@@ -23,6 +23,7 @@ describe("runInit", () => {
     expect(report.created.length).toBeGreaterThan(0);
     // Managed JSON schema is installed under .manifast/schema.
     await expect(readFile(path.join(dir, ".manifast/schema/wireframe.schema.json"), "utf8")).resolves.toContain("manifast");
+    await expect(stat(path.join(dir, ".manifast/diagrams")).then((s) => s.isDirectory())).resolves.toBe(true);
     // The Claude Code skill is installed.
     await expect(readFile(path.join(dir, ".claude/skills/manifast/SKILL.md"), "utf8")).resolves.toBeTruthy();
     // CLAUDE.md gets the durable managed block.

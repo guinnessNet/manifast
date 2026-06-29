@@ -2,17 +2,19 @@
 
 **A local, read-only visualizer for AI-authored wireframes and dev docs.**
 
-> v1.2.0 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
+> v1.2.1 · version history in [CHANGELOG.md](CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](CLAUDE.md)
 
 Claude Code / Codex write structured files into a `.manifast/` folder (wireframe
-JSON + PRD/spec Markdown + task & plan JSON). Manifast renders them as a live
-**wireframe canvas**, **doc viewer**, **kanban board**, **roadmap**, and
-**relationship map** — with **live reload** when the agent edits a file,
-**light/dark themes** + accent colors, and **export** to PNG/SVG/HTML/JSON/
-Markdown/ZIP. Fully local, personal, no accounts, no database, no AI calls.
+JSON, PRD/spec Markdown, task/plan JSON, and diagram JSON). Manifast renders them
+as a live **wireframe canvas**, **doc viewer**, **kanban board**, **roadmap**,
+**relationship map**, **user-flow view**, and **feature-tree view** — with
+**live reload** when the agent edits a file, **light/dark themes** + accent
+colors, and **export** to PNG/SVG/HTML/JSON/Markdown/ZIP. Fully local, personal,
+no accounts, no database, no AI calls.
 
 The app never writes your files, with two scoped exceptions: `manifast init`
-(scaffolds and installs the skill, never overwriting anything) and the
+(scaffolds the workspace and refreshes Manifast-managed skill files without
+overwriting your own content) and the
 [Document management](#document-management-v2) feature, which writes **only doc
 frontmatter** (`uid` + status/metadata, never the body). The single source of
 truth is the `.manifast/` folder; the server just reads, validates, and serves it.
@@ -61,8 +63,8 @@ manifast init
 
 # 2) Ask Claude Code / Codex to design something, e.g.
 #    "Design a login + dashboard screen and write the PRD."
-#    The agent reads .claude/skills/manifast/SKILL.md (or AGENTS.md) and writes
-#    valid files into .manifast/.
+#    The agent reads .manifast/AGENTS.md (Claude Code also loads the
+#    .claude/skills/manifast skill) and writes valid files into .manifast/.
 
 # 3) Start the viewer (opens your browser at http://localhost:4317)
 manifast
@@ -77,7 +79,7 @@ refreshes in ~300 ms — no full page reload.
 |---|---|
 | `manifast` | Start the server for the current folder and open the browser |
 | `manifast <dir>` | Use `<dir>` (or `<dir>/.manifast`) as the workspace |
-| `manifast init [dir]` | Scaffold `.manifast/` + install the skill (never overwrites) |
+| `manifast init [dir]` | Scaffold `.manifast/` + install/refresh Manifast-managed agent guides without overwriting user content |
 | `manifast validate [dir]` | Check the workspace against the schemas + links; exits 1 on errors (`--strict` also fails on warnings) |
 | `manifast --port <n>` | Use a specific port (default 4317; next free port if taken) |
 | `manifast --no-open` | Don't open the browser |
@@ -86,15 +88,17 @@ refreshes in ~300 ms — no full page reload.
 ## What `init` installs
 
 ```
-.claude/skills/manifast/SKILL.md   # Claude Code skill
-AGENTS.md                          # Codex / general-purpose instructions
 .manifast/
+  AGENTS.md                        # LLM-neutral authoring guide
   schema/*.json                    # JSON Schema (generated from the zod source)
-  wireframes/  prd/  specs/  tasks/  plan/   # scaffolded folders
-  …example content (only when the workspace is empty)
+  wireframes/  prd/  specs/  tasks/  plan/  diagrams/
+.claude/skills/manifast/           # Claude Code skill + checklist/workflow docs
+.claude/skills/{brainstorm,write-plan,implement}/
+AGENTS.md / CLAUDE.md              # managed Manifast directive block, preserving your text
 ```
 
-Existing files are **never overwritten** — re-running `init` is safe.
+User-owned text is preserved; Manifast-managed files are refreshed when the
+bundled guide/schema changes. Re-running `init` is safe.
 
 ## The views
 
@@ -110,6 +114,10 @@ Existing files are **never overwritten** — re-running `init` is safe.
 - **Plan** — vertical roadmap of phases with per-phase task progress.
 - **Map** — relationship graph (auto-laid-out with dagre, pan/zoom) of how docs,
   wireframes, tasks and the plan connect; see [Maps & diagrams](#maps--diagrams-v3).
+- **User Flow** — directed flow diagrams (`kind: "flow"`) with start/page/action/
+  decision/end node types and labelled edges.
+- **Tree** — hierarchy diagrams (`kind: "tree"`) for feature trees, sitemaps, and
+  requirement breakdowns.
 
 Links between items (spec ↔ wireframe ↔ task ↔ plan) are clickable chips that
 jump to the target; broken links (missing ids) show greyed-out.
@@ -185,6 +193,8 @@ Authoritative details live in the installed `SKILL.md` / `AGENTS.md` and in
   `related[]`, `sources[]`, `updatedAt`) + Markdown body.
 - `tasks/tasks.json` — `schema: "manifast.tasks/1"`, `tasks[]`.
 - `plan/plan.json` — `schema: "manifast.plan/1"`, `phases[]`.
+- `diagrams/<id>.json` — `schema: "manifast.diagram/1"`, `nodes[]`, `edges[]`,
+  optional `groups[]`, `kind`, `layout`, and clickable `node.ref`.
 
 Invalid JSON/frontmatter never blanks the screen: the offending item shows an
 error banner; everything else keeps rendering.
