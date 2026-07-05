@@ -4,7 +4,7 @@
 
 ![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
 
-> v1.3.1 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
+> v1.3.2 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
 
 **How it works:** an AI coding agent ([Claude Code](https://www.claude.com/product/claude-code)
 or [Codex](https://developers.openai.com/codex/cli/)) writes structured files into a

@@ -38,12 +38,12 @@ check("renderer: navbar brand + table column", wfHtml.includes("Manifast") && wf
 // 2. Task board
 const boardHtml = renderToStaticMarkup(<Board tasksData={dto.items.tasks} graph={graph} />);
 check("board: 4 columns", ["To Do", "In Progress", "Done", "Blocked"].every((c) => boardHtml.includes(c)));
-check("board: task title rendered", boardHtml.includes("로그인 폼 구현"));
-check("board: dep chip rendered (task-1 as dep of task-2)", boardHtml.includes("task-1") || boardHtml.includes("로그인 폼 구현"));
+check("board: task title rendered", boardHtml.includes("Implement login form"));
+check("board: dep chip rendered (task-1 as dep of task-2)", boardHtml.includes("task-1") || boardHtml.includes("Implement login form"));
 
 // 3. Roadmap
 const roadHtml = renderToStaticMarkup(<Roadmap planData={dto.items.plan} graph={graph} />);
-check("roadmap: phase names", roadHtml.includes("MVP 인증") && roadHtml.includes("대시보드"));
+check("roadmap: phase names", roadHtml.includes("MVP Auth") && roadHtml.includes("Dashboard"));
 check("roadmap: progress text", /\d+\/\d+ done/.test(roadHtml));
 
 // 4. Markdown (GFM + highlight)
@@ -73,7 +73,7 @@ const mapHtml = renderToStaticMarkup(
     <MapView data={dto} tick={0} />
   </NavContext.Provider>,
 );
-check("MapView renders node labels", mapHtml.includes("로그인") || mapHtml.includes("대시보드"));
+check("MapView renders node labels", mapHtml.includes("Login") || mapHtml.includes("Dashboard"));
 
 // 7. agent-authored diagram lays out
 const arch = DiagramFileSchema.parse(JSON.parse(readFileSync("skill/examples/.manifast/diagrams/architecture.json", "utf8")));

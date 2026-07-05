@@ -1,141 +1,141 @@
 ---
 name: manifast-workflow
-description: End-to-end feature development workflow for Manifast projects — Brainstorm (design) → Plan (정반합 dialectical verification) → Implement (subagent-per-task + Manifast doc updates). Run phases in order or jump to any phase independently.
+description: End-to-end feature development workflow for Manifast projects — Brainstorm (design) → Plan (dialectical thesis-antithesis-synthesis verification) → Implement (subagent-per-task + Manifast doc updates). Run phases in order or jump to any phase independently.
 ---
 
-# Manifast 개발 워크플로우
+# Manifast development workflow
 
-기능 개발 전 과정을 3단계로 자동화한다. 각 단계는 독립적으로 실행 가능하며, 순서대로 실행하면 설계 → 검증된 계획 → 구현 → 문서 자동 업데이트가 이어진다.
+Automates the entire feature-development process in three phases. Each phase can run independently, and running them in order chains design → verified plan → implementation → automatic doc updates.
 
 ```
-Brainstorm → Write Plan (정반합 검증) → Implement (서브에이전트 + Manifast 업데이트)
+Brainstorm → Write Plan (dialectical verification) → Implement (subagents + Manifast updates)
 ```
 
 ---
 
-## PHASE 1 — Brainstorm (설계 탐색)
+## PHASE 1 — Brainstorm (design exploration)
 
-> Superpowers brainstorming 스킬 기반. 코드 한 줄도 쓰기 전에 설계를 확정한다.
+> Based on the Superpowers brainstorming skill. Lock down the design before writing a single line of code.
 
-**시작 선언:** "Manifast 워크플로우 Phase 1 — Brainstorm을 시작합니다."
+**Opening declaration:** "Starting Manifast workflow Phase 1 — Brainstorm."
 
-### 하드 게이트
+### Hard gate
 
-설계 승인 전까지 코드 작성·스캐폴딩·구현 행동 일체 금지. 단순한 작업도 예외 없음.
+No code writing, scaffolding, or implementation of any kind until the design is approved. No exceptions, even for simple tasks.
 
-### 진행 순서
+### Sequence
 
-**1. 프로젝트 컨텍스트 파악**
-- `.manifast/` 전체 읽기 (prd, specs, tasks, plan, diagrams)
-- 현재 태스크 상태·로드맵 단계 파악
-- 최근 커밋·변경 이력 확인
+**1. Understand the project context**
+- Read all of `.manifast/` (prd, specs, tasks, plan, diagrams)
+- Assess the current task status and roadmap stage
+- Review recent commits and change history
 
-**2. 요건 탐색 (질문 하나씩)**
-- 목적, 제약, 성공 기준을 파악한다
-- 한 메시지에 질문 하나만 — 복수 질문 금지
-- 가능하면 객관식으로 제시, 추천 포함
+**2. Explore requirements (one question at a time)**
+- Identify the goal, constraints, and success criteria
+- One question per message — no multiple questions
+- Present multiple-choice options where possible, with a recommendation
 
-**3. 접근법 2–3개 제안**
-- 각 접근법의 트레이드오프 명시
-- 추천 접근법과 이유 제시
-- 과잉 설계(YAGNI 위반) 제거
+**3. Propose 2–3 approaches**
+- State the trade-offs of each approach
+- Present the recommended approach and the reasoning
+- Eliminate over-engineering (YAGNI violations)
 
-**4. 설계 문서 작성**
-- 설계 승인 후 `.manifast/specs/<YYYY-MM-DD>-<feature-id>.md`에 저장
+**4. Write the design document**
+- After the design is approved, save it to `.manifast/specs/<YYYY-MM-DD>-<feature-id>.md`
 - frontmatter: `schema · id · type: spec · title · status: draft · sources: [] · owner`
-- 섹션: 목표 · 아키텍처 · 컴포넌트 · 데이터 흐름 · 에러 처리 · 테스트 전략
+- Sections: Goals · Architecture · Components · Data flow · Error handling · Test strategy
 
-**5. 설계 자가 검토**
-- TBD·TODO·빈 섹션 없는지 확인
-- 내부 모순 확인
-- 단일 구현 계획으로 충분한 범위인지 확인
-- 문제 발견 시 즉시 수정
+**5. Self-review the design**
+- Check for no TBDs, TODOs, or empty sections
+- Check for internal contradictions
+- Confirm the scope fits a single implementation plan
+- Fix any issues found immediately
 
-**6. 사용자 검토 요청**
-> "설계 문서를 `.manifast/specs/<path>`에 저장했습니다. 검토 후 계획 작성으로 넘어갈지 알려주세요."
+**6. Request user review**
+> "I've saved the design document to `.manifast/specs/<path>`. Review it and let me know whether to move on to writing the plan."
 
-**→ 승인 시 PHASE 2로 진행**
+**→ On approval, proceed to PHASE 2**
 
 ---
 
-## PHASE 2 — Write Plan with 정반합 검증
+## PHASE 2 — Write Plan with dialectical verification
 
-> Superpowers writing-plans 기반 + **정반합(正反合) 변증법으로 계획 검증**.
-> 에이전트가 스스로 계획을 공격하고 종합해 품질을 보장한다.
+> Based on Superpowers writing-plans + **verify the plan with the 正反合 (thesis-antithesis-synthesis) dialectic**.
+> The agent attacks and synthesizes its own plan to guarantee quality.
 
-**시작 선언:** "Manifast 워크플로우 Phase 2 — 정반합 계획 검증을 시작합니다."
+**Opening declaration:** "Starting Manifast workflow Phase 2 — dialectical plan verification."
 
-### 정 (正, Thesis) — 초안 계획 작성
+### Thesis (正) — Draft the plan
 
-**파일 구조 매핑**
-- 생성/수정할 파일과 각 책임 정의
-- 파일 간 인터페이스(함수명·타입·반환값) 확정
+**Map the file structure**
+- Define the files to create/modify and each one's responsibility
+- Finalize the interfaces between files (function names, types, return values)
 
-**태스크 분해**
-- 각 태스크 = 독립적으로 테스트 가능한 최소 단위
-- 각 단계는 2–5분 분량 (TDD: 실패 테스트 작성 → 실패 확인 → 구현 → 통과 확인 → 커밋)
-- **Manifast 업데이트 태스크 반드시 포함** (tasks.json · plan.json · specs · diagrams)
+**Break down into tasks**
+- Each task = the smallest independently testable unit
+- Each step is 2–5 minutes of work (TDD: write failing test → confirm failure → implement → confirm pass → commit)
+- **Always include a Manifast update task** (tasks.json · plan.json · specs · diagrams)
 
-**계획 문서 헤더 (필수)**
+**Plan document header (required)**
 
 ```markdown
-# [기능명] 구현 계획
+# [feature name] implementation plan
 
-> **에이전트 워커용:** 이 계획은 태스크 단위로 실행한다.
-> 각 태스크 완료 후 반드시 `manifast-checklist` 스킬을 실행한다.
+> **For agent workers:** execute this plan task by task.
+> After completing each task, always run the `manifast-checklist` skill.
 
-**목표:** [한 문장]
-**아키텍처:** [2–3문장]
-**기술 스택:** [핵심 기술/라이브러리]
+**Goal:** [one sentence]
+**Architecture:** [2–3 sentences]
+**Tech stack:** [core technologies/libraries]
 
-## 전역 제약사항
-[프로젝트 전체에 적용되는 요구사항 — 버전, 네이밍, 플랫폼 등]
+## Global constraints
+[requirements that apply across the whole project — versions, naming, platform, etc.]
 
 ---
 ```
 
-**태스크 구조 (플레이스홀더 금지)**
+**Task structure (no placeholders)**
 
 ```markdown
-### 태스크 N: [컴포넌트명]
+### Task N: [component name]
 
-**파일:**
-- 생성: `exact/path/to/file.py`
-- 수정: `exact/path/to/existing.py`
+**Files:**
+- Create: `exact/path/to/file.py`
+- Modify: `exact/path/to/existing.py`
 
-**인터페이스:**
-- 소비: [이 태스크가 앞 태스크에서 사용하는 것 — 정확한 시그니처]
-- 제공: [뒤 태스크가 의존하는 것 — 정확한 함수명·타입]
+**Interfaces:**
+- Consumes: [what this task uses from earlier tasks — exact signatures]
+- Provides: [what later tasks depend on — exact function names/types]
 
-- [ ] 실패 테스트 작성
-- [ ] 실패 확인 (`pytest ...` 또는 해당 테스트 러너)
-- [ ] 최소 구현 작성
-- [ ] 통과 확인
-- [ ] 커밋 (`git add ... && git commit -m "feat: ..."`)
-- [ ] **Manifast 체크리스트 실행** (tasks.json · plan.json · 영향받은 문서 업데이트)
+- [ ] Write failing test
+- [ ] Confirm failure (`pytest ...` or the relevant test runner)
+- [ ] Write minimal implementation
+- [ ] Confirm pass
+- [ ] Commit (`git add ... && git commit -m "feat: ..."`)
+- [ ] **Run the Manifast checklist** (update tasks.json · plan.json · affected docs)
 ```
 
 ---
 
-### 반 (反, Antithesis) — 계획 비판
+### Antithesis (反) — Critique the plan
 
-초안 완성 후, **같은 에이전트가 비판자 역할로 전환**해 계획을 공격한다.
+After the draft is complete, **the same agent switches into the role of critic** and attacks the plan.
 
-아래 질문에 하나씩 답하며 문제를 발굴한다:
+Answer each question below in turn to surface problems:
 
-1. **실패 시나리오**: "이 계획이 실패하는 상황은? 어떤 엣지 케이스가 빠졌나?"
-2. **가정 검증**: "근거 없이 당연하게 가정한 것은? 잘못될 가능성은?"
-3. **설계 과잉**: "YAGNI 위반 — 지금 당장 필요하지 않은데 포함된 것은?"
-4. **설계 부족**: "나중에 큰 리팩터링이 필요해질 부분은?"
-5. **인터페이스 불일치**: "태스크 간 타입·함수명이 맞지 않는 부분은?"
-6. **Manifast 누락**: "태스크 완료 후 Manifast 업데이트를 빠뜨린 곳은?"
-7. **테스트 공백**: "테스트가 없거나 의미 없는 태스크는?"
-8. **순서 문제**: "의존성 순서가 잘못된 태스크 쌍은?"
+1. **Failure scenarios**: "In what situations does this plan fail? Which edge cases are missing?"
+2. **Assumption check**: "What did we take for granted without evidence? How could it be wrong?"
+3. **Over-design**: "YAGNI violations — what's included that isn't needed right now?"
+4. **Under-design**: "What will require a major refactor later?"
+5. **Interface mismatch**: "Where do types or function names not line up between tasks?"
+6. **Missing Manifast updates**: "Where did we skip a Manifast update after completing a task?"
+7. **Test gaps**: "Which tasks have no tests or meaningless ones?"
+8. **Ordering problems**: "Which task pairs have the wrong dependency order?"
 
-발굴된 문제를 **비판 목록**으로 정리:
+Organize the surfaced problems into a **critique list**:
 
 ```
-## 반 (反) 비판 목록
+## Antithesis (反) critique list
 - [CRITICAL] ...
 - [IMPORTANT] ...
 - [MINOR] ...
@@ -143,119 +143,119 @@ Brainstorm → Write Plan (정반합 검증) → Implement (서브에이전트 +
 
 ---
 
-### 합 (合, Synthesis) — 최종 계획 확정
+### Synthesis (合) — Finalize the plan
 
-비판 목록을 검토해 계획을 수정하고, 수정 이유를 기록한다.
+Review the critique list, revise the plan, and record the reasons for each change.
 
 ```markdown
-## 정반합 검증 결과
+## Dialectical verification results
 
-### 반영한 비판
-- [비판 항목] → [어떻게 수정했는지]
+### Critiques applied
+- [critique item] → [how it was fixed]
 
-### 기각한 비판 (이유)
-- [비판 항목] → [기각 이유: YAGNI / 범위 밖 / 이미 처리됨 / ...]
+### Critiques rejected (reasons)
+- [critique item] → [rejection reason: YAGNI / out of scope / already handled / ...]
 ```
 
-**최종 계획 저장:** `docs/plans/<YYYY-MM-DD>-<feature-id>-plan.md`
+**Save the final plan:** `docs/plans/<YYYY-MM-DD>-<feature-id>-plan.md`
 
-**사용자 검토 요청:**
-> "정반합 검증 완료. 계획을 `<path>`에 저장했습니다. 검토 후 구현을 시작할까요?"
+**Request user review:**
+> "Dialectical verification complete. I've saved the plan to `<path>`. Shall I start implementation after your review?"
 
-**→ 승인 시 PHASE 3으로 진행**
+**→ On approval, proceed to PHASE 3**
 
 ---
 
-## PHASE 3 — Implement (서브에이전트 실행)
+## PHASE 3 — Implement (subagent execution)
 
-> Superpowers subagent-driven-development 기반. 태스크마다 신선한 서브에이전트를 디스패치하고 리뷰 게이트를 통과해야 다음 태스크로 넘어간다.
+> Based on Superpowers subagent-driven-development. Dispatch a fresh subagent per task, and only move to the next task after passing the review gate.
 
-**시작 선언:** "Manifast 워크플로우 Phase 3 — 서브에이전트 구현을 시작합니다."
+**Opening declaration:** "Starting Manifast workflow Phase 3 — subagent implementation."
 
-### 원칙
+### Principles
 
-- **태스크당 신선한 서브에이전트** — 이전 세션 컨텍스트 오염 없음
-- **사용자에게 중간 보고 없음** — 태스크 완료·리뷰 통과 시만 다음으로 진행
-- **블로커 발생 시 즉시 중단** — 추측하지 말고 보고
+- **A fresh subagent per task** — no contamination from prior session context
+- **No interim reports to the user** — proceed only when a task is done and its review passes
+- **Stop immediately on a blocker** — don't guess, report
 
-### 각 태스크 실행 순서
-
-```
-1. 태스크 브리프 준비 (계획 파일에서 해당 태스크 텍스트 추출)
-2. 구현 서브에이전트 디스패치
-   - 전달: 태스크 브리프 + 전역 제약 + 앞 태스크 인터페이스
-   - 금지: 전체 계획 파일 통째로 전달 (해당 태스크만 전달)
-3. 서브에이전트 질문 처리 후 구현 진행
-4. 구현 완료 보고 확인:
-   - 구현 코드 커밋됨
-   - 테스트 통과 (결과 포함)
-   - manifast-checklist 실행 완료
-5. 리뷰 서브에이전트 디스패치 (diff 파일 전달)
-   - 검토 항목: spec 준수 여부 + 코드 품질
-6. 리뷰 통과 → 다음 태스크 / 미통과 → 수정 서브에이전트 디스패치
-```
-
-### 구현 서브에이전트 디스패치 프롬프트 구조
+### Sequence for each task
 
 ```
-컨텍스트: [이 태스크가 전체에서 어떤 위치인지 한 줄]
-브리프: [태스크 전문]
-전역 제약: [계획의 Global Constraints 섹션 그대로]
-앞 태스크 인터페이스: [이 태스크가 사용할 함수·타입 — 정확한 시그니처]
-보고서 저장 경로: [task-N-report.md]
-
-완료 후 반드시:
-1. 테스트 실행 결과 포함
-2. manifast-checklist 실행 (tasks.json·plan.json 업데이트)
-3. 상태 보고: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED
+1. Prepare the task brief (extract that task's text from the plan file)
+2. Dispatch the implementation subagent
+   - Pass: task brief + global constraints + earlier tasks' interfaces
+   - Forbidden: passing the whole plan file at once (pass only that task)
+3. Handle the subagent's questions, then proceed with implementation
+4. Confirm the completion report:
+   - Implementation code committed
+   - Tests pass (results included)
+   - manifast-checklist run completed
+5. Dispatch the review subagent (pass the diff file)
+   - Review items: spec compliance + code quality
+6. Review passes → next task / fails → dispatch a fix subagent
 ```
 
-### 상태별 처리
+### Implementation subagent dispatch prompt structure
 
-| 상태 | 처리 |
+```
+Context: [one line on where this task sits in the whole]
+Brief: [the full task text]
+Global constraints: [the plan's Global Constraints section verbatim]
+Earlier task interfaces: [the functions/types this task will use — exact signatures]
+Report save path: [task-N-report.md]
+
+After completion, always:
+1. Include test run results
+2. Run manifast-checklist (update tasks.json·plan.json)
+3. Report status: DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED
+```
+
+### Handling by status
+
+| Status | Handling |
 |---|---|
-| `DONE` | diff 생성 → 리뷰 서브에이전트 디스패치 |
-| `DONE_WITH_CONCERNS` | 우려사항 검토 후 리뷰 진행 또는 수정 |
-| `NEEDS_CONTEXT` | 누락 컨텍스트 보충 후 재디스패치 |
-| `BLOCKED` | 원인 파악 → 컨텍스트/모델/태스크 분해 중 하나로 해결 |
+| `DONE` | Generate diff → dispatch review subagent |
+| `DONE_WITH_CONCERNS` | Review the concerns, then proceed to review or fix |
+| `NEEDS_CONTEXT` | Supply the missing context, then re-dispatch |
+| `BLOCKED` | Find the cause → resolve via one of: context / model / task breakdown |
 
-### 진행 장부 (컨텍스트 압축 대비)
+### Progress ledger (in case of context compaction)
 
 ```
 .manifast/workflow-progress.md
 ---
-태스크 1: 완료 (커밋 <hash>, 리뷰 통과)
-태스크 2: 완료 (커밋 <hash>, 리뷰 통과)
-태스크 3: 진행 중
+Task 1: done (commit <hash>, review passed)
+Task 2: done (commit <hash>, review passed)
+Task 3: in progress
 ```
 
-- 재시작 시 이 파일을 먼저 읽어 완료된 태스크를 건너뜀
-- 절대 완료된 태스크 재디스패치 금지
+- On restart, read this file first to skip completed tasks
+- Never re-dispatch a completed task
 
-### 전체 완료 후
+### After everything is complete
 
-1. 최종 코드 리뷰 (전체 브랜치 diff)
-2. 모든 태스크가 done인지 `tasks.json` 확인
-3. 완료된 phase가 있으면 `plan.json` 업데이트
-4. `.manifast/workflow-progress.md` 삭제
-5. 사용자에게 완료 보고
-
----
-
-## 단계 독립 실행
-
-각 단계를 독립적으로 시작할 수 있다:
-
-- **설계만**: "Manifast 워크플로우 Phase 1 — Brainstorm"
-- **계획만**: "Manifast 워크플로우 Phase 2 — Write Plan (정반합 검증 포함)"
-- **구현만**: "Manifast 워크플로우 Phase 3 — Implement" (계획 파일 경로 필요)
+1. Final code review (full branch diff)
+2. Check `tasks.json` that all tasks are done
+3. Update `plan.json` if any phase is complete
+4. Delete `.manifast/workflow-progress.md`
+5. Report completion to the user
 
 ---
 
-## 핵심 원칙
+## Running phases independently
 
-- **YAGNI**: 지금 필요하지 않은 것은 설계·구현하지 않는다
-- **설계 우선**: 코드 한 줄 전에 설계 확정
-- **정반합**: 계획은 반드시 스스로 공격하고 검증한다
-- **신선한 컨텍스트**: 서브에이전트는 필요한 것만 받는다
-- **Manifast 동기화**: 모든 태스크 완료 시 체크리스트 실행
+Each phase can be started independently:
+
+- **Design only**: "Manifast workflow Phase 1 — Brainstorm"
+- **Plan only**: "Manifast workflow Phase 2 — Write Plan (with dialectical verification)"
+- **Implementation only**: "Manifast workflow Phase 3 — Implement" (requires the plan file path)
+
+---
+
+## Core principles
+
+- **YAGNI**: don't design or implement what isn't needed now
+- **Design first**: lock down the design before a single line of code
+- **Dialectic**: always attack and verify the plan yourself
+- **Fresh context**: subagents receive only what they need
+- **Manifast sync**: run the checklist on every task completion

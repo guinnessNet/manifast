@@ -68,7 +68,7 @@ test.describe("Manifast SPA e2e (built app)", () => {
     await page.locator("aside").getByRole("button", { name: "Map" }).click();
     // The auto Project map is radial and uses straight two-point edges. Pick an
     // authored dagre diagram so this checks the smooth routed-edge behavior.
-    await page.getByRole("combobox").selectOption({ label: "Manifast 아키텍처 · architecture" });
+    await page.getByRole("combobox").selectOption({ label: "Manifast Architecture · architecture" });
     await expect(page.getByText("Server (Fastify)").first()).toBeVisible({ timeout: 10_000 });
     const paths = page.locator("#mf-root svg path[marker-end]");
     await expect(paths.first()).toBeVisible({ timeout: 10_000 });

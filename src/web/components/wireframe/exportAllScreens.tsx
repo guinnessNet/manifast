@@ -15,7 +15,7 @@ import { loadFullIcons } from "./nodes";
  */
 export async function exportAllScreensPNG(wireframes: WireframeMeta[], zipName = "wireframes"): Promise<void> {
   const valid = wireframes.filter((w) => w.ok);
-  if (valid.length === 0) throw new Error("내보낼 수 있는 와이어프레임이 없습니다");
+  if (valid.length === 0) throw new Error("No wireframes available to export");
 
   const host = document.createElement("div");
   host.style.cssText = "position:fixed;left:-100000px;top:0;pointer-events:none;";

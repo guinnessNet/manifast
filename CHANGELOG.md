@@ -4,85 +4,128 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
-## 1.3.1 — README/스크린샷 1.3.0 동기화 + 릴리스 가드 (2026-07-06)
+## 1.3.2 — full English localization (2026-07-06)
 
-기능 변경 없음(문서/릴리스 위생). npm 페이지 README를 1.3.0 내용으로 맞추기 위한
-재게시.
+Manifast's entire user-facing surface is now English (it was Korean). No feature
+or behavior change — a localization pass so English users get a consistent
+experience end to end.
 
-- **README를 1.3.0 기준으로 갱신** — 버전 배지, 와이어프레임 드래그 팬·전체 lucide
-  아이콘, Docs 관련/참조됨 칩·본문 상대링크, Map의 kind별 색+아이콘+범례·적응
-  레이아웃·CJK 라벨 실측, Export의 전체 화면 PNG ZIP·테마 반영·유니코드 파일명,
-  본문 링크 관계 인식·루트 파일 고아 제외.
-- **스크린샷 재촬영** — `map`/`wireframes`/`docs`를 1.3.0 렌더로 교체.
-- **릴리스 가드 추가** — `prepublishOnly`에 `check:readme`를 넣어, README 버전
-  배지가 `package.json`과 다르면 publish가 실패한다. 버전 범프 시 README 갱신을
-  강제하는 장치(`scripts/check-readme-version.mjs`).
+- **App UI → English.** Every browser-facing string: the connection error banner,
+  the Docs rail (Collapse/Expand all, Related, ← Referenced by, Show archived), the
+  Map toolbar + panels (Group by folder, Show N unlinked docs, N orphan docs, Needs
+  review, focus, relation toggles, legends), the Export menus, the wireframe canvas
+  hint (`Drag to pan · Ctrl+wheel to zoom`), and all empty-states / alerts.
+- **Server + CLI messages → English.** REST error bodies (`path is required`,
+  cross-origin / non-local-host rejections) and doc-write / workspace-parse errors
+  (`Cannot read file`, `JSON parse failed`, `Write failed`, `Review overdue`).
+- **The directive `init` writes into your repo → English.** The managed
+  `CLAUDE.md` / `AGENTS.md` block (`## Manifast — document authoring rules`) is now
+  English, so `manifast init` no longer injects Korean instructions into an English
+  project.
+- **Agent authoring guides → English.** `skill/SKILL.md`, `AGENTS.md`,
+  `WORKFLOW.md`, `CHECKLIST.md`, and the brainstorm / write-plan / implement skills —
+  so the agent reads English rules and emits English deliverables.
+- **Demo workspace → English.** `manifast init --example` now seeds an English
+  `.manifast/` (wireframes, PRD/specs, tasks, plan, diagrams, docs).
+- **Screenshots re-shot** against the English demo; unit tests + SSR checks updated
+  to the English strings. Mechanical rendering (font stack, ISO dates, encoding) was
+  already locale-safe and is unchanged — CJK/Korean labels an agent authors are
+  still measured and rendered correctly.
 
-## 1.3.0 — 관계도/다이어그램 렌더링 정밀화 + export 신뢰성 (2026-07-05)
+## 1.3.1 — sync README/screenshots to 1.3.0 + release guard (2026-07-06)
 
-실사용 피드백("문서 관계·구조도가 제대로/예쁘게 안 그려진다, export 품질 불확실")을
-정조준한 릴리스.
+No feature change (docs / release hygiene). A republish to align the npm-page
+README with the 1.3.0 content.
 
-### Map / 다이어그램 (관계도·구조도)
-- **한글 라벨 잘림 해결.** 노드 크기를 canvas `measureText`로 실측(CJK 폭 반영,
-  SSR은 CJK 가중 추정으로 폴백)하고, 긴 제목은 말줄임 대신 **2줄 줄바꿈**.
-- **관계 종류가 눈에 보인다.** 간선을 kind별 색+점선으로 구분(links/related/
-  references/spec/screen/dep/task/deprecatedBy…), 화살촉도 같은 색, 툴바의
-  kind 필터 칩이 색상 범례를 겸함. 노드는 doc/wireframe/task/phase/folder별
-  고유 색+아이콘, 캔버스 우하단에 노드 종류 범례.
-- **radial 레이아웃 재설계.** 간선을 노드 경계에서 절단해 화살촉·라벨이 노드에
-  묻히지 않음, 간선 라벨은 진짜 중점에 배경 halo와 함께 표시, 링 반지름이 노드
-  수에 맞춰 자동 확장(칩 겹침 불가), 서브트리별 부채꼴 배치로 관련 노드가 부모
-  근처에 모임, **연결 컴포넌트마다 독립 radial 클라우드**(뭉개진 두 번째
-  클러스터 없음), 고립 노드는 하단 그리드 밴드.
-- **dagre 멀티그래프 + 간선 라벨 공간 예약** — 같은 노드쌍의 복수 간선이 더는
-  겹쳐 사라지지 않고, 라벨 위치를 dagre가 배정. flow의 `decision`은 **다이아몬드**로.
-- 자동 프로젝트 맵: task `specId`가 uid여도 간선 생성, spec↔task 상호 선언
-  중복 간선 병합, 암호 같던 간선 라벨("→", "~", "src") 제거.
+- **README updated to 1.3.0** — version badge; wireframe drag-pan + the full lucide
+  icon set; Docs related/referenced chips + relative body links; the Map's per-kind
+  color + icon + legend, adaptive layout, and measured CJK labels; Export's
+  all-screens PNG ZIP, theme-aware output, and Unicode filenames; body-link
+  relationship detection + root-file orphan exclusion.
+- **Screenshots re-shot** — replaced `map`/`wireframes`/`docs` with 1.3.0 renders.
+- **Release guard added** — `prepublishOnly` now runs `check:readme`, so a publish
+  fails if the README version badge doesn't match `package.json`. This forces a
+  README refresh on every version bump (`scripts/check-readme-version.mjs`).
 
-### 문서 관계
-- **markdown 본문 링크를 관계로 인식.** `[스펙](./feat-auth.md)` 같은 상대 링크를
-  서버가 추출(코드 펜스 제외)해 맵의 `references` 간선 + 고아 판정에 반영 —
-  frontmatter 없이도 실제 docs/ 폴더의 관계가 그려진다.
-- **문서 화면에 관계가 보인다.** `related`/본문 링크(관련)와 역링크(← 참조됨)
-  칩을 문서 헤더에 표시.
-- 문서 본문의 **상대 .md 링크는 SPA 내 이동**(전체 리로드 없음), 상대 이미지 경로는
-  `/api/raw`로 로드. `related`가 경로("docs/x.md")나 파일명("x")이어도 해석.
-- 루트 파일(README/CLAUDE/AGENTS)은 고아 경고에서 제외.
+## 1.3.0 — map/diagram rendering precision + export reliability (2026-07-05)
+
+A release aimed squarely at real-user feedback ("doc relationships / structure
+diagrams don't render correctly or nicely; export quality is uncertain").
+
+### Map / diagrams (relationship + structure graphs)
+- **Fixed clipped CJK labels.** Node sizes are measured with canvas `measureText`
+  (accounting for CJK width; SSR falls back to a CJK-weighted estimate), and long
+  titles now **wrap to 2 lines** instead of ellipsizing.
+- **Relation kinds are now visible.** Edges are distinguished by per-kind color +
+  dash (links/related/references/spec/screen/dep/task/deprecatedBy…), arrowheads
+  match the color, and the toolbar's kind-filter chips double as the color legend.
+  Nodes get a per-kind color + icon (doc/wireframe/task/phase/folder), with a
+  node-kind legend at the bottom-right of the canvas.
+- **Radial layout redesigned.** Edges are clipped at node borders so arrowheads /
+  labels aren't buried in nodes; edge labels sit at the true midpoint with a
+  background halo; ring radius auto-expands with node count (no chip overlap);
+  per-subtree fan placement clusters related nodes near their parent; **each
+  connected component gets its own radial cloud** (no mashed-together second
+  cluster); isolated nodes go in a bottom grid band.
+- **dagre multigraph + edge-label spacing** — multiple edges between the same node
+  pair no longer overlap and vanish, and dagre assigns the label positions. A flow
+  `decision` now renders as a **diamond**.
+- Auto project map: builds an edge even when a task's `specId` is a uid, merges the
+  duplicate edges from reciprocal spec↔task declarations, and drops the cryptic edge
+  labels ("→", "~", "src").
+
+### Doc relationships
+- **Markdown body links recognized as relationships.** The server extracts relative
+  links like `[spec](./feat-auth.md)` (excluding code fences) into the map's
+  `references` edges + orphan detection — so a real `docs/` folder's relationships
+  render even without frontmatter.
+- **Relationships are visible in the doc view.** `related` / body-link (Related) and
+  backlink (← Referenced by) chips show in the doc header.
+- A doc body's **relative .md links navigate inside the SPA** (no full reload);
+  relative image paths load through `/api/raw`. `related` resolves whether it's a
+  path ("docs/x.md") or a filename ("x").
+- Root files (README/CLAUDE/AGENTS) are excluded from the orphan warning.
 
 ### Export
-- **맵/다이어그램 PNG·SVG에서 간선이 사라지던 버그 수정** — export 시 CSS 변수를
-  대상 요소에 인라인해 `var(--edge)` 참조가 복제본에서도 해석되게 함.
-- **한글 파일명 보존**("로그인 유저플로우.png" — 이전엔 "manifast.png").
-- 맵 export가 현재 테마 배경색 사용(다크에서 반쪽 다크/흰 배경 뒤섞임 제거).
-- **`.zip`의 `.manifast/.manifast/` 이중 중첩 수정** — 압축 해제하면 바로 복원 가능.
-- **와이어프레임 "PNG 전체 (N장 ZIP)"** — 화면 전부를 한 번에 PNG로.
-- Doc "Print / PDF"가 독립 창에서 인쇄(앱 크롬/1페이지 잘림/다크 잉크 문제 해결),
-  거대 맵은 픽셀 예산 내로 자동 축소(빈 PNG 방지), export 실패가 조용히
-  삼켜지지 않고 알림 표시.
+- **Fixed a bug where edges vanished from map/diagram PNG·SVG** — export now inlines
+  CSS variables onto the target element so `var(--edge)` references resolve in the
+  clone too.
+- **Unicode filenames preserved** ("login-user-flow.png" — previously "manifast.png").
+- Map export uses the current theme's background color (no more half-dark / white
+  mix in dark mode).
+- **Fixed the `.manifast/.manifast/` double-nesting in `.zip`** — it now restores
+  directly on unzip.
+- **Wireframe "PNG all (N as ZIP)"** — every screen to PNG at once.
+- Doc "Print / PDF" prints from a standalone window (fixing app-chrome / one-page
+  clipping / dark-ink issues); a huge map auto-downscales within a pixel budget (no
+  blank PNG); and an export failure surfaces an alert instead of being silently
+  swallowed.
 
-### 와이어프레임 렌더러
-- **모든 lucide 아이콘 지원**(~1,500개, 지연 로드 청크) — 커스텀 33종 외 이름이
-  점선 placeholder로 깨지던 문제 해결.
-- `label` 있는 Input/Select 필드 박스 높이 안정화(찌그러진 21px 필드 제거),
-  SKILL 가이드에 "label 사용 시 280×62" 명시.
-- Text 노드가 프레임에 맞는 줄 수로 **line-clamp + 말줄임**(위아래 반 잘린 글자
-  제거), card/section Box가 자식을 클리핑(둥근 모서리 침범·카드 밖 유출 방지),
-  Table/List 행 높이 상한(거대 스켈레톤 행 제거), Avatar 글리프가 프레임에 비례,
-  ghost 버튼에 밑줄(정적 export에서도 인터랙티브로 읽힘), Textarea `rows`·Select
-  `options` 실반영, 썸네일 로딩 스켈레톤/오류 placeholder.
+### Wireframe renderer
+- **All lucide icons supported** (~1,500, lazy-loaded chunk) — fixing names beyond
+  the 33 custom ones breaking into a dashed placeholder.
+- Stabilized the box height of Input/Select fields with a `label` (no more squashed
+  21px fields); the SKILL guide documents "280×62 when using a label".
+- Text nodes **line-clamp + ellipsize** to the number of lines that fit the frame (no
+  half-cut top/bottom glyphs); card/section Boxes clip children (no rounded-corner
+  bleed / overflow outside the card); Table/List row-height caps (no giant skeleton
+  rows); Avatar glyphs scale to the frame; ghost buttons get an underline (so they
+  read as interactive even in a static export); Textarea `rows` / Select `options`
+  actually reflected; thumbnail loading skeleton / error placeholder.
 
-### 캔버스 UX
-- **왼쪽 드래그로 팬**(클릭과 4px 임계값으로 구분), 화면에 조작 힌트 표시,
-  창 크기 변경 시 자동 refit(사용자가 조작한 뒤엔 유지), 휠 deltaMode 정규화,
-  초대형 맵도 Fit 가능(축소 하한 제거).
+### Canvas UX
+- **Left-drag to pan** (distinguished from a click by a 4px threshold), an on-screen
+  interaction hint, auto-refit on window resize (kept once the user has interacted),
+  wheel deltaMode normalization, and Fit works even on a huge map (removed the
+  min-zoom floor).
 
-### 예제 워크스페이스
-- PRD에 `related`/본문 링크 추가(첫 실행부터 관계도가 이어짐 + 고아 경고 감소),
-  radial `doc-map.json` 예제 추가(SKILL에서 참조), 스펙에 `sources`/`owner`/
-  `reviewBy` 시연, 로그인/대시보드 필드 높이 수정, 대시보드 하단 빈 공간을
-  Recent activity(withAvatar List)·Team 카드로 채움, 단독 Radio를 Light/Dark
-  그룹으로 교체.
+### Example workspace
+- Added `related` / body links to the PRD (relationships connect from the first run +
+  fewer orphan warnings), added a radial `doc-map.json` example (referenced from
+  SKILL), demonstrated `sources` / `owner` / `reviewBy` in specs, fixed
+  login/dashboard field heights, filled the dashboard's bottom empty space with a
+  Recent activity (withAvatar List) + Team card, and replaced a lone Radio with a
+  Light/Dark group.
 
 ## 1.2.3 — README troubleshooting + CI auto-publish (2026-06-30)
 
@@ -104,8 +147,8 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
   "you need an AI coding agent (Claude Code / Codex)" prerequisite with links, an
   empty-state note (views are empty until the agent writes files), documented the
   new demo flags, switched internal doc links (`CHANGELOG`/`CLAUDE`/`DESIGN`) to
-  absolute GitHub URLs so they resolve on the npm page, and replaced the Korean
-  "부록 B" with "Appendix B".
+  absolute GitHub URLs so they resolve on the npm page, and replaced a Korean
+  appendix reference with "Appendix B".
 
 ## 1.2.1 — `manifast validate` + LLM-agnostic guide + security hardening (2026-06-28)
 
@@ -142,7 +185,7 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 - **New "User Flow" view.** Agent-authored `kind:"flow"` diagrams render as a
   dedicated, read-only user flow: typed nodes — `start`/`end` (green/red **pills**),
   `page` (clicks through to its wireframe via `ref`), `action`, `decision` — laid out
-  top-down/left-right by dagre with **arrowed, labelled edges** (e.g. `예`/`아니오`).
+  top-down/left-right by dagre with **arrowed, labelled edges** (e.g. `Yes`/`No`).
   Lives in its own sidebar tab; no in-app editing — the agent authors the JSON, the app
   draws + live-reloads + exports.
 - **New "Tree" view.** `kind:"tree"` hierarchy diagrams render top-down as a feature
@@ -161,7 +204,7 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
 - **The Docs sidebar is now a collapsible folder tree.** The flat, full-path
   group headers are replaced by a nested folder hierarchy (like VS Code): each
   folder collapses/expands via a chevron (click · Enter · Space), carries a
-  **recursive doc-count badge** (e.g. `claim 15`), and **모두 접기 / 모두 펼치기**
+  **recursive doc-count badge** (e.g. `claim 15`), and **Collapse all / Expand all**
   collapse/expand the whole tree at once. Folders sort before files; the
   agent-authored `.manifast/prd` + `.manifast/specs` keep their PRD/Specs labels.
 - **State persists.** Collapse/expand state is saved to `localStorage`
@@ -175,7 +218,7 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
   AA-contrast `--text-muted` token.
 - Internals: a new pure `src/web/lib/docTree.ts` (`buildDocTree` / `allFolderPaths`
   / `folderLabel`) with unit tests + DocRail render tests. The Map view's separate
-  “폴더로 집계” aggregation is unchanged — this is the **sidebar** tree.
+  “Group by folder” aggregation is unchanged — this is the **sidebar** tree.
 
 ## 1.0.1 — doc readability (2026-06-26)
 
@@ -186,7 +229,7 @@ Building from source? Bump the version, then `npm run build && npm install -g .`
   to clear ≥4.5:1 (light muted #52525b ~7:1, faint #6b6b76 ~4.8:1; dark muted
   #9a9aa4 ~6.6:1, faint #7a7a84 ~4.6:1). Body size 14.5px→15px.
 - **Korean font stack:** lead with Pretendard and keep explicit Hangul fallbacks
-  (Apple SD Gothic Neo / Malgun Gothic / Noto Sans KR) so 한글 no longer falls
+  (Apple SD Gothic Neo / Malgun Gothic / Noto Sans KR) so Korean text no longer falls
   back to bare `system-ui`.
 
 ## 1.0.0 — first public release (2026-06-26)
@@ -296,7 +339,7 @@ Ctrl+C exits immediately).
 
 ## 1.2.0
 
-**Document governance / 지속관리 (v4).** (See DESIGN 부록 D.)
+**Document governance (v4).** (See DESIGN Appendix D.)
 
 - **Durable directive:** `manifast init` now merges a marker-delimited managed
   block (`<!-- manifast:begin -->…<!-- manifast:end -->`) into the project's
@@ -325,7 +368,7 @@ Ctrl+C exits immediately).
   Diátaxis → IA → gap → migration, all proposed as drafts) and an ongoing
   freshness/drift routine. **ADR** is first-class (`docs/adr/NNNN-*.md`, immutable,
   status mapped onto draft/active/deprecated).
-- **Map — stale panel:** a "검토 필요 N개" panel lists stale docs with reasons,
+- **Map — stale panel:** a "Needs review (N)" panel lists stale docs with reasons,
   alongside the orphans panel; stale doc nodes get an amber ring.
 
 ## 1.1.2
@@ -354,7 +397,7 @@ Ctrl+C exits immediately).
 
 ## 1.1.0
 
-**Document management (v2) + Diagrams/Map (v3).** (See DESIGN 부록 B·C.)
+**Document management (v2) + Diagrams/Map (v3).** (See DESIGN Appendix B·C.)
 
 - **Multi-source docs:** ingests `docs/` and root `CLAUDE.md`/`AGENTS.md`/`README.md`
   in addition to `.manifast/`. Plain `.md` (no frontmatter) is ingested leniently

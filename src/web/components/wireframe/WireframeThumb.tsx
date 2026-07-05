@@ -20,7 +20,7 @@ export function WireframeThumb({ path, tick, maxW = 240, maxH = 200, active, onC
     return (
       <button
         onClick={onClick}
-        title={loading ? "Loading…" : `열 수 없음: ${path}`}
+        title={loading ? "Loading…" : `Can't open: ${path}`}
         className={
           "relative block overflow-hidden rounded-md border bg-[var(--bg-elevated)] " +
           (loading ? "animate-pulse border-[var(--border)]" : "border-[var(--err-border)] bg-[var(--err-bg)]")

@@ -158,7 +158,7 @@ export function exportNodeHTML(el: HTMLElement, name: string, extraCss = ""): vo
  */
 export function printNodeHTML(el: HTMLElement, title: string, extraCss = ""): void {
   const w = window.open("", "_blank", "noopener=false");
-  if (!w) throw new Error("팝업이 차단되어 인쇄 창을 열 수 없습니다");
+  if (!w) throw new Error("Pop-up blocked — can't open the print window");
   w.document.write(standaloneHtml(el, title, extraCss));
   w.document.close();
   // Give the new window a beat to lay out (and load webfonts) before printing.

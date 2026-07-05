@@ -56,7 +56,7 @@ const TYPED_KINDS = new Set([
 const PILL_KINDS = new Set(["start", "end", "terminator"]);
 
 // Tiny inline icon per manifast kind — the icon (not just hue) is what makes
-// two same-named chips ("대시보드" the doc vs "대시보드" the screen) tellable apart.
+// two same-named chips ("Dashboard" the doc vs "Dashboard" the screen) tellable apart.
 const KIND_ICON: Record<string, LucideIcon> = {
   doc: FileText,
   wireframe: LayoutGrid,
@@ -209,7 +209,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
 
   if (match && modeDiagrams.length === 0) {
     const isFlow = mode === "flow";
-    const title = isFlow ? "아직 User Flow 다이어그램이 없습니다." : "아직 Tree 다이어그램이 없습니다.";
+    const title = isFlow ? "No User Flow diagram yet." : "No Tree diagram yet.";
     const kindLiteral = isFlow ? '"kind": "flow"' : '"kind": "tree"';
     const kinds = isFlow ? "start · page · action · decision · end" : "project · requirement · feature · detail";
     return (
@@ -217,15 +217,15 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
         <div className="max-w-md">
           <p className="text-sm font-medium text-[var(--text)]">{title}</p>
           <p className="mt-2 text-xs leading-relaxed text-[var(--text-faint)]">
-            에이전트가{" "}
+            When an agent writes{" "}
             <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
               .manifast/diagrams/&lt;id&gt;.json
             </code>{" "}
-            을{" "}
+            with{" "}
             <code className="rounded bg-[var(--bg-elevated)] px-1 py-0.5 font-mono text-[var(--text-muted)]">
               {kindLiteral}
-            </code>{" "}
-            로 작성하면 자동 정렬되어 여기에 렌더됩니다. 노드 <code className="font-mono">kind</code>는 {kinds}.
+            </code>
+            , it’s auto-arranged and rendered here. Node <code className="font-mono">kind</code> is one of {kinds}.
           </p>
         </div>
       </div>
@@ -258,10 +258,10 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
         {selected === "__project__" && (
           <button
             onClick={() => setAggregate((s) => !s)}
-            title="문서를 폴더 단위로 묶어 구조만 보기 / 개별 문서 펼치기"
+            title="Group docs by folder for a structural view / expand individual docs"
             className="rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
           >
-            {aggregate ? "개별 문서 펼치기" : "폴더로 집계"}
+            {aggregate ? "Expand docs" : "Group by folder"}
           </button>
         )}
         {selected === "__project__" && !aggregate && (hiddenDocs > 0 || showAllDocs) && (
@@ -269,12 +269,12 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
             onClick={() => setShowAllDocs((s) => !s)}
             className="rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-soft)]"
           >
-            {showAllDocs ? "링크 없는 문서 숨기기" : `링크 없는 문서 ${hiddenDocs}개 표시`}
+            {showAllDocs ? "Hide unlinked docs" : `Show ${hiddenDocs} unlinked docs`}
           </button>
         )}
 
         {/* Focus (neighborhood) mode */}
-        <label className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]" title="노드를 클릭하면 그 이웃(1~N홉)만 보기">
+        <label className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]" title="Click a node to show only its neighbors (1–N hops)">
           <input
             type="checkbox"
             checked={focusMode}
@@ -293,11 +293,11 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
               {depth}
             </label>
             <button onClick={() => setFocusId(null)} className="rounded-md px-2 py-1 text-xs text-[var(--text-muted)] hover:bg-[var(--accent-soft)]">
-              전체 보기
+              Show all
             </button>
           </>
         )}
-        {focusMode && !focusId && <span className="text-xs text-[var(--text-faint)]">노드를 클릭해 이웃만 보기</span>}
+        {focusMode && !focusId && <span className="text-xs text-[var(--text-faint)]">Click a node to show its neighbors</span>}
 
         {/* Edge-kind filters (double as the edge-color legend) */}
         {edgeKinds.length > 1 &&
@@ -305,7 +305,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
             <button
               key={k}
               onClick={() => toggleKind(k)}
-              title={`관계 '${k}' 토글`}
+              title={`Toggle '${k}' relation`}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px]",
                 hiddenKinds.has(k)
@@ -330,16 +330,16 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
             onClick={() => setShowOrphans((s) => !s)}
             className="rounded-md px-2 py-1 text-xs text-[var(--warn)] hover:bg-[var(--warn-bg)]"
           >
-            고아 문서 {orphans.length}개
+            {orphans.length} orphan docs
           </button>
         )}
-        {/* Stale (검토 필요) */}
+        {/* Stale (needs review) */}
         {staleDocs.length > 0 && (
           <button
             onClick={() => setShowStale((s) => !s)}
             className="rounded-md px-2 py-1 text-xs text-[var(--warn)] hover:bg-[var(--warn-bg)]"
           >
-            검토 필요 {staleDocs.length}개
+            {staleDocs.length} need review
           </button>
         )}
 
@@ -360,7 +360,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
             <ErrorBanner path={selected} message={errMsg} />
           </div>
         ) : !layout || layout.nodes.length === 0 ? (
-          <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">표시할 노드가 없습니다.</div>
+          <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">No nodes to show.</div>
         ) : (
           <Canvas contentW={layout.width} contentH={layout.height} fitKey={`${selected}:${focusId ?? ""}:${depth}`}>
             <div ref={contentRef} style={{ position: "relative", width: layout.width, height: layout.height }}>
@@ -460,9 +460,9 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
                   if (focusMode) setFocusId(n.id);
                   else if (target) navigate(target);
                 };
-                const title = stale ? `${n.node.label} — 검토 필요(stale)` : n.node.description ?? n.node.label;
+                const title = stale ? `${n.node.label} — needs review (stale)` : n.node.description ?? n.node.label;
                 // Multi-line labels wrap to 2 lines before ellipsizing (layout.ts
-                // sizes the chip accordingly) — Korean titles stay readable.
+                // sizes the chip accordingly) — long titles stay readable.
                 const labelStyle: React.CSSProperties = {
                   display: "-webkit-box",
                   WebkitBoxOrient: "vertical",
@@ -599,7 +599,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
         {showOrphans && orphans.length > 0 && (
           <div className="absolute right-3 top-3 z-20 max-h-[70%] w-64 overflow-auto rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-2 shadow-[0_10px_32px_rgba(0,0,0,0.14)]">
             <div className="mb-1 flex items-center justify-between px-1 text-xs font-semibold text-[var(--text-muted)]">
-              <span>고아 문서 (링크 없음)</span>
+              <span>Orphan docs (no links)</span>
               <button onClick={() => setShowOrphans(false)} className="text-[var(--text-faint)] hover:text-[var(--text)]">
                 ×
               </button>
@@ -621,7 +621,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
         {showStale && staleDocs.length > 0 && (
           <div className="absolute left-3 top-3 z-20 max-h-[70%] w-72 overflow-auto rounded-xl border border-[var(--warn-border)] bg-[var(--bg-elevated)] p-2 shadow-[0_10px_32px_rgba(0,0,0,0.14)]">
             <div className="mb-1 flex items-center justify-between px-1 text-xs font-semibold text-[var(--warn)]">
-              <span>검토 필요 (stale)</span>
+              <span>Needs review (stale)</span>
               <button onClick={() => setShowStale(false)} className="text-[var(--text-faint)] hover:text-[var(--text)]">
                 ×
               </button>

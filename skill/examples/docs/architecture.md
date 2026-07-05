@@ -1,14 +1,16 @@
-# 아키텍처 개요
+# Architecture Overview
 
-이 문서는 `.manifast/` 밖의 일반 `docs/` 폴더에 있는 **외부 문서**입니다.
-frontmatter 없이도 Manifast가 자동으로 인식해서 보여줍니다 (제목은 첫 H1에서,
-날짜는 파일 시스템에서 추론).
+This document is an **external document** in a regular `docs/` folder outside
+`.manifast/`. Manifast recognizes and shows it automatically even without
+frontmatter (the title is inferred from the first H1, the date from the file
+system).
 
-오른쪽 위 **Adopt** 버튼을 누르면 추적용 `uid`가 frontmatter에 부여되어,
-이 파일을 다른 폴더로 옮겨도 같은 문서로 계속 추적됩니다.
+Clicking the **Adopt** button in the top right assigns a tracking `uid` to the
+frontmatter, so this file keeps being tracked as the same document even if you
+move it to another folder.
 
-## 구성 요소
+## Components
 
-- 로컬 서버 (Fastify)
-- 와이어프레임 캔버스
-- 문서 대시보드
+- Local server (Fastify)
+- Wireframe canvas
+- Document dashboard

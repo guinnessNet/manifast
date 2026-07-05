@@ -3,8 +3,8 @@
   "tasks": [
     {
       "id": "task-1",
-      "title": "로그인 폼 구현",
-      "description": "이메일/비밀번호 입력과 제출 처리",
+      "title": "Implement login form",
+      "description": "Email/password input and submit handling",
       "status": "in_progress",
       "priority": "high",
       "specId": "feat-auth",
@@ -12,8 +12,8 @@
     },
     {
       "id": "task-2",
-      "title": "비밀번호 검증",
-      "description": "형식 검증 및 인라인 에러",
+      "title": "Password validation",
+      "description": "Format validation and inline errors",
       "status": "todo",
       "priority": "med",
       "specId": "feat-auth",
@@ -21,7 +21,7 @@
     },
     {
       "id": "task-3",
-      "title": "대시보드 레이아웃",
+      "title": "Dashboard layout",
       "status": "done",
       "priority": "high",
       "specId": "feat-dashboard",
@@ -29,8 +29,8 @@
     },
     {
       "id": "task-4",
-      "title": "차트 위젯",
-      "description": "KPI 카드 옆 차트 영역",
+      "title": "Chart widget",
+      "description": "Chart area next to the KPI cards",
       "status": "blocked",
       "priority": "med",
       "specId": "feat-dashboard",
@@ -38,7 +38,7 @@
     },
     {
       "id": "task-5",
-      "title": "검색 필터",
+      "title": "Search filter",
       "status": "todo",
       "priority": "low"
     }

@@ -25,12 +25,12 @@ export interface RoadmapProps {
 
 export function Roadmap({ planData, graph }: RoadmapProps) {
   if (!planData) {
-    return <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">plan/plan.json 이 없습니다.</div>;
+    return <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">No plan/plan.json yet.</div>;
   }
   if (!planData.ok) {
     return (
       <div className="p-4">
-        <ErrorBanner path={planData.path} message={planData.error ?? "plan.json 파싱 실패"} />
+        <ErrorBanner path={planData.path} message={planData.error ?? "Failed to parse plan.json"} />
       </div>
     );
   }
@@ -41,7 +41,7 @@ export function Roadmap({ planData, graph }: RoadmapProps) {
         {planData.phases.map((phase, i) => (
           <PhaseRow key={phase.id} phase={phase} graph={graph} last={i === planData.phases.length - 1} />
         ))}
-        {planData.phases.length === 0 && <p className="text-sm text-[var(--text-faint)]">단계가 없습니다.</p>}
+        {planData.phases.length === 0 && <p className="text-sm text-[var(--text-faint)]">No phases yet.</p>}
       </div>
     </div>
   );

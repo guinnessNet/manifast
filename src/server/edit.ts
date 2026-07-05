@@ -66,12 +66,12 @@ export interface AdoptResult {
 /** Stamp a random, stable uid into a doc's frontmatter (idempotent). */
 export async function adoptDoc(projectDir: string, rel: string): Promise<AdoptResult> {
   const abs = resolveDoc(projectDir, rel);
-  if (!abs) return { ok: false, error: "유효하지 않은 문서 경로" };
+  if (!abs) return { ok: false, error: "Invalid document path" };
   let raw: string;
   try {
     raw = await readFile(abs, "utf8");
   } catch {
-    return { ok: false, error: "파일을 읽을 수 없음" };
+    return { ok: false, error: "Cannot read file" };
   }
   let existing: unknown;
   try {
@@ -86,7 +86,7 @@ export async function adoptDoc(projectDir: string, rel: string): Promise<AdoptRe
   try {
     await writeFile(abs, setFrontmatterKeys(raw, { uid }), "utf8");
   } catch (e) {
-    return { ok: false, error: `쓰기 실패: ${(e as Error).message}` };
+    return { ok: false, error: `Write failed: ${(e as Error).message}` };
   }
   return { ok: true, uid };
 }
@@ -105,14 +105,14 @@ export async function setDocStatus(
   status: string,
   deprecatedBy?: string,
 ): Promise<StatusResult> {
-  if (!STATUS_SET.has(status)) return { ok: false, error: `알 수 없는 상태: ${status}` };
+  if (!STATUS_SET.has(status)) return { ok: false, error: `Unknown status: ${status}` };
   const abs = resolveDoc(projectDir, rel);
-  if (!abs) return { ok: false, error: "유효하지 않은 문서 경로" };
+  if (!abs) return { ok: false, error: "Invalid document path" };
   let raw: string;
   try {
     raw = await readFile(abs, "utf8");
   } catch {
-    return { ok: false, error: "파일을 읽을 수 없음" };
+    return { ok: false, error: "Cannot read file" };
   }
   const updates: Record<string, string> = { status, updatedAt: today() };
   if (status === "deprecated") {
@@ -123,7 +123,7 @@ export async function setDocStatus(
   try {
     await writeFile(abs, setFrontmatterKeys(raw, updates), "utf8");
   } catch (e) {
-    return { ok: false, error: `쓰기 실패: ${(e as Error).message}` };
+    return { ok: false, error: `Write failed: ${(e as Error).message}` };
   }
   return { ok: true };
 }
@@ -143,12 +143,12 @@ export async function setDocReview(
   fields: { owner?: string; lastReviewed?: string; reviewBy?: number },
 ): Promise<ReviewResult> {
   const abs = resolveDoc(projectDir, rel);
-  if (!abs) return { ok: false, error: "유효하지 않은 문서 경로" };
+  if (!abs) return { ok: false, error: "Invalid document path" };
   let raw: string;
   try {
     raw = await readFile(abs, "utf8");
   } catch {
-    return { ok: false, error: "파일을 읽을 수 없음" };
+    return { ok: false, error: "Cannot read file" };
   }
   const updates: Record<string, FmValue> = {
     lastReviewed:
@@ -162,7 +162,7 @@ export async function setDocReview(
   try {
     await writeFile(abs, setFrontmatterKeys(raw, updates), "utf8");
   } catch (e) {
-    return { ok: false, error: `쓰기 실패: ${(e as Error).message}` };
+    return { ok: false, error: `Write failed: ${(e as Error).message}` };
   }
   return { ok: true };
 }

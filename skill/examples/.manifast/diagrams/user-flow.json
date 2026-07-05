@@ -1,27 +1,27 @@
 {
   "schema": "manifast.diagram/1",
   "id": "auth-flow",
-  "title": "로그인 유저플로우",
+  "title": "Login user flow",
   "kind": "flow",
   "direction": "TB",
   "generatedBy": "claude-code",
   "generatedAt": "2026-06-26",
   "nodes": [
-    { "id": "visit", "label": "방문", "kind": "start", "description": "사용자가 앱에 진입" },
-    { "id": "login", "label": "로그인 화면", "kind": "page", "description": "이메일/비밀번호 입력 화면", "ref": { "kind": "wireframe", "id": "screen-login" } },
-    { "id": "submit", "label": "자격 증명 입력 후 제출", "kind": "action" },
-    { "id": "auth", "label": "인증 성공?", "kind": "decision" },
-    { "id": "error", "label": "오류 메시지 표시", "kind": "action", "description": "잘못된 자격 증명 안내" },
-    { "id": "dashboard", "label": "대시보드", "kind": "page", "description": "로그인 성공 후 메인", "ref": { "kind": "wireframe", "id": "screen-dashboard" } },
-    { "id": "done", "label": "이용 시작", "kind": "end" }
+    { "id": "visit", "label": "Visit", "kind": "start", "description": "User enters the app" },
+    { "id": "login", "label": "Login screen", "kind": "page", "description": "Email/password entry screen", "ref": { "kind": "wireframe", "id": "screen-login" } },
+    { "id": "submit", "label": "Enter credentials and submit", "kind": "action" },
+    { "id": "auth", "label": "Authentication successful?", "kind": "decision" },
+    { "id": "error", "label": "Show error message", "kind": "action", "description": "Notify of invalid credentials" },
+    { "id": "dashboard", "label": "Dashboard", "kind": "page", "description": "Main screen after successful login", "ref": { "kind": "wireframe", "id": "screen-dashboard" } },
+    { "id": "done", "label": "Start using", "kind": "end" }
   ],
   "edges": [
     { "from": "visit", "to": "login", "kind": "next" },
-    { "from": "login", "to": "submit", "kind": "next", "label": "로그인 클릭" },
+    { "from": "login", "to": "submit", "kind": "next", "label": "Click Login" },
     { "from": "submit", "to": "auth", "kind": "next" },
-    { "from": "auth", "to": "dashboard", "kind": "next", "label": "예" },
-    { "from": "auth", "to": "error", "kind": "next", "label": "아니오" },
-    { "from": "error", "to": "login", "kind": "next", "label": "재시도" },
+    { "from": "auth", "to": "dashboard", "kind": "next", "label": "Yes" },
+    { "from": "auth", "to": "error", "kind": "next", "label": "No" },
+    { "from": "error", "to": "login", "kind": "next", "label": "Retry" },
     { "from": "dashboard", "to": "done", "kind": "next" }
   ]
 }

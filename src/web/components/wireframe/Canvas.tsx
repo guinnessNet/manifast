@@ -231,7 +231,7 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
 
       {/* interaction hint — pan/zoom is otherwise undiscoverable */}
       <span className="pointer-events-none absolute bottom-[22px] left-[190px] hidden text-[10.5px] text-[var(--text-faint)] sm:block">
-        드래그 이동 · Ctrl+휠 확대/축소
+        Drag to pan · Ctrl+wheel to zoom
       </span>
     </div>
   );

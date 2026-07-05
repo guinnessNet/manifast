@@ -2,7 +2,7 @@
 schema: manifast.doc/1
 id: prd-main
 type: prd
-title: Manifast Demo — 제품 요구사항
+title: Manifast Demo — Product Requirements
 status: active
 related: [feat-auth, feat-dashboard]
 sources: []
@@ -10,36 +10,36 @@ owner: demo
 updatedAt: 2026-06-24
 ---
 
-## 배경
+## Background
 
-이 문서는 `manifast init` 이 시드한 **예제 PRD** 입니다. Manifast 가
-Markdown + frontmatter 문서를 어떻게 렌더하는지 보여줍니다.
+This document is the **example PRD** seeded by `manifast init`. It shows how
+Manifast renders Markdown + frontmatter documents.
 
-## 목표
+## Goals
 
-- 이메일/비밀번호 로그인 제공
-- 핵심 지표를 한눈에 보는 대시보드 제공
+- Provide email/password login
+- Provide a dashboard that shows the key metrics at a glance
 
-## 범위
+## Scope
 
-| 기능 | 우선순위 | 상태 |
+| Feature | Priority | Status |
 |---|---|---|
-| 로그인 | 높음 | 진행 중 |
-| 대시보드 | 높음 | 완료 |
-| 검색 필터 | 낮음 | 예정 |
+| Login | High | In progress |
+| Dashboard | High | Done |
+| Search filter | Low | Planned |
 
-## 완료 조건
+## Done criteria
 
-- [x] 로그인 화면 와이어프레임
-- [x] 대시보드 와이어프레임
-- [ ] 검색 필터 구현
+- [x] Login screen wireframe
+- [x] Dashboard wireframe
+- [ ] Search filter implementation
 
-## 상세 스펙
+## Detailed spec
 
-- [사용자 인증](../specs/feat-auth.md) — 로그인 흐름과 검증 규칙
-- [대시보드](../specs/feat-dashboard.md) — 지표 카드와 테이블 구성
+- [User authentication](../specs/feat-auth.md) — login flow and validation rules
+- [Dashboard](../specs/feat-dashboard.md) — metric cards and table layout
 
-## 참고 코드
+## Reference code
 
 ```ts
 function signIn(email: string, password: string) {
@@ -47,4 +47,4 @@ function signIn(email: string, password: string) {
 }
 ```
 
-> 이 문서를 수정하면 Manifast 가 ~300ms 내에 자동으로 다시 렌더합니다.
+> When you edit this document, Manifast automatically re-renders it within ~300ms.

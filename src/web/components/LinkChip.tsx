@@ -16,7 +16,7 @@ export function LinkChip({ target, label, exists, icon, className }: LinkChipPro
   if (!exists) {
     return (
       <span
-        title="링크 대상을 찾을 수 없습니다 (broken link)"
+        title="Link target not found (broken link)"
         className={cn(
           "inline-flex items-center gap-1 rounded-full border border-dashed border-[var(--border)] px-2 py-0.5 text-xs text-[var(--text-faint)] line-through cursor-not-allowed",
           className,

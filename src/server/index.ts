@@ -111,11 +111,11 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
   app.addHook("onRequest", async (req, reply) => {
     // DNS-rebinding defense — only serve requests addressed to a local Host.
     if (!isLocalHost(req.headers.host)) {
-      return reply.code(403).send({ ok: false, error: "non-local host 거부됨" });
+      return reply.code(403).send({ ok: false, error: "Rejected: non-local host" });
     }
     // CSRF defense — reject state-changing requests from a non-local Origin.
     if (req.method === "POST" && !isLocalOrigin(req.headers.origin)) {
-      return reply.code(403).send({ ok: false, error: "cross-origin 요청 거부됨" });
+      return reply.code(403).send({ ok: false, error: "Rejected: cross-origin request" });
     }
   });
 
@@ -126,7 +126,7 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
     const q = req.query as { path?: string };
     if (!q.path) {
       reply.code(400);
-      return { ok: false, error: "path 쿼리 파라미터가 필요합니다" };
+      return { ok: false, error: "The path query parameter is required" };
     }
     return readFileResource(opts.projectDir, q.path);
   });
@@ -138,7 +138,7 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
     const b = (req.body ?? {}) as { path?: string };
     if (!b.path) {
       reply.code(400);
-      return { ok: false, error: "path 필요" };
+      return { ok: false, error: "path is required" };
     }
     return adoptDoc(opts.projectDir, b.path);
   });
@@ -147,7 +147,7 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
     const b = (req.body ?? {}) as { path?: string; status?: string; deprecatedBy?: string };
     if (!b.path || !b.status) {
       reply.code(400);
-      return { ok: false, error: "path 와 status 필요" };
+      return { ok: false, error: "path and status are required" };
     }
     return setDocStatus(opts.projectDir, b.path, b.status, b.deprecatedBy);
   });
@@ -161,7 +161,7 @@ export async function buildApp(opts: ServerOptions): Promise<BuiltApp> {
     };
     if (!b.path) {
       reply.code(400);
-      return { ok: false, error: "path 필요" };
+      return { ok: false, error: "path is required" };
     }
     return setDocReview(opts.projectDir, b.path, {
       owner: b.owner,

@@ -1,7 +1,7 @@
 {
   "schema": "manifast.diagram/1",
   "id": "arch",
-  "title": "Manifast 아키텍처",
+  "title": "Manifast Architecture",
   "kind": "architecture",
   "direction": "LR",
   "generatedBy": "claude-code",

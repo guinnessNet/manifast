@@ -175,7 +175,7 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
       <div className="min-w-0 flex-1 overflow-auto">
         {!path ? (
           <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">
-            표시할 문서가 없습니다.
+            No document to show.
           </div>
         ) : (
           <div className="mx-auto max-w-[820px] px-10 pb-20 pt-7">
@@ -217,7 +217,7 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                     {successor && (
                       <span className="inline-flex items-center gap-1 text-xs text-[var(--text-muted)]">
                         →
-                        <LinkChip target={{ kind: "doc", id: successor }} exists={graph.hasDoc(successor)} label={`후속: ${successor}`} />
+                        <LinkChip target={{ kind: "doc", id: successor }} exists={graph.hasDoc(successor)} label={`Next: ${successor}`} />
                       </span>
                     )}
                     {wfId && (
@@ -241,13 +241,13 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                 {(relatedDocs.length > 0 || backlinks.length > 0) && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
                     {relatedDocs.length > 0 && (
-                      <span className="text-[11px] font-medium text-[var(--text-faint)]">관련</span>
+                      <span className="text-[11px] font-medium text-[var(--text-faint)]">Related</span>
                     )}
                     {relatedDocs.map((d) => (
                       <LinkChip key={d.path} target={{ kind: "doc", id: d.id }} exists label={d.title} icon={<FileText size={11} />} />
                     ))}
                     {backlinks.length > 0 && (
-                      <span className="text-[11px] font-medium text-[var(--text-faint)]">← 참조됨</span>
+                      <span className="text-[11px] font-medium text-[var(--text-faint)]">← Referenced by</span>
                     )}
                     {backlinks.map((d) => (
                       <LinkChip key={d.path} target={{ kind: "doc", id: d.id }} exists label={d.title} icon={<FileText size={11} />} />
@@ -267,7 +267,7 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                       </span>
                     )}
                     {meta?.sources?.map((src) => (
-                      <span key={src} className="inline-flex items-center gap-1" title="이 문서가 기술하는 코드">
+                      <span key={src} className="inline-flex items-center gap-1" title="Code this doc describes">
                         <FileCode size={11} />
                         {src}
                       </span>
@@ -289,7 +289,7 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                     <div className="flex items-start gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-elevated)] p-3">
                       <WireframeThumb path={wfMeta.path} tick={tick} onClick={() => navigate({ kind: "wireframe", id: wfMeta.id })} />
                       <div className="text-xs text-[var(--text-muted)]">
-                        <div className="font-medium text-[var(--text)]">연결된 화면</div>
+                        <div className="font-medium text-[var(--text)]">Linked screen</div>
                         <div>{wfMeta.name}</div>
                         <div className="text-[var(--text-faint)]">{wfMeta.device}</div>
                       </div>
@@ -405,23 +405,23 @@ function DocRail({
         <div className="flex items-center justify-end gap-0.5 px-3 pb-1.5">
           <button
             onClick={() => setCollapsed((prev) => new Set([...prev, ...folderPaths]))}
-            title="모든 폴더 접기"
+            title="Collapse all folders"
             className="rounded-md px-1.5 py-0.5 text-[11px] text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
           >
-            모두 접기
+            Collapse all
           </button>
           <button
             onClick={() => setCollapsed(new Set())}
-            title="모든 폴더 펼치기"
+            title="Expand all folders"
             className="rounded-md px-1.5 py-0.5 text-[11px] text-[var(--text-muted)] transition-colors hover:bg-[var(--accent-soft)] hover:text-[var(--text)]"
           >
-            모두 펼치기
+            Expand all
           </button>
         </div>
       )}
 
       <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-1">
-        {docs.length === 0 && <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">문서가 없습니다</p>}
+        {docs.length === 0 && <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">No documents</p>}
         {tree.folders.map((child) => (
           <FolderNode
             key={child.path}
@@ -438,7 +438,7 @@ function DocRail({
           <DocButton key={d.path} doc={d} depth={0} active={selected === d.path} onSelect={onSelect} />
         ))}
         {visible.length === 0 && docs.length > 0 && (
-          <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">일치하는 문서가 없습니다</p>
+          <p className="px-2.5 py-3 text-xs text-[var(--text-faint)]">No matching documents</p>
         )}
       </div>
 
@@ -449,7 +449,7 @@ function DocRail({
             className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-[var(--text-faint)] hover:bg-[var(--accent-soft)]"
           >
             <Archive size={14} />
-            {showArchived ? "아카이브 숨기기" : `아카이브 보기 (${archivedCount})`}
+            {showArchived ? "Hide archived" : `Show archived (${archivedCount})`}
           </button>
         </div>
       )}
@@ -503,7 +503,7 @@ function FolderNode({
           type="button"
           onClick={() => onToggle(folder.path)}
           aria-expanded={!collapsed}
-          aria-label={`${label} 폴더, 문서 ${folder.count}개, ${collapsed ? "접힘" : "펼침"}`}
+          aria-label={`${label} folder, ${folder.count} docs, ${collapsed ? "collapsed" : "expanded"}`}
           title={folder.path}
           style={indentStyle(depth)}
           className="flex w-full items-center gap-1.5 rounded-lg py-[6px] pr-2.5 text-left transition-colors hover:bg-[var(--accent-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
@@ -605,7 +605,7 @@ function StatusControl({ path, status }: { path: string; status: string }) {
     try {
       await setDocStatus(path, s); // live-reload refreshes the view
     } catch (e) {
-      alert("상태 변경 실패: " + (e as Error).message);
+      alert("Failed to change status: " + (e as Error).message);
     } finally {
       setBusy(false);
       setOpen(false);
@@ -614,7 +614,7 @@ function StatusControl({ path, status }: { path: string; status: string }) {
 
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen((o) => !o)} disabled={busy} className="inline-flex items-center gap-1" title="상태 변경">
+      <button onClick={() => setOpen((o) => !o)} disabled={busy} className="inline-flex items-center gap-1" title="Change status">
         <Badge tone={STATUS_TONE[status] ?? "neutral"}>
           {status === "none" ? "set status" : status}
           <ChevronDown size={11} />
@@ -642,7 +642,7 @@ function AdoptControl({ path, uid }: { path: string; uid?: string }) {
   const [busy, setBusy] = useState(false);
   if (uid) {
     return (
-      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--text-faint)]" title="추적용 고유 ID (이동해도 유지)">
+      <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[var(--text-faint)]" title="Stable tracking ID (survives moves)">
         <Hash size={11} />
         {uid}
       </span>
@@ -653,13 +653,13 @@ function AdoptControl({ path, uid }: { path: string; uid?: string }) {
       variant="outline"
       size="sm"
       disabled={busy}
-      title="이동/이름변경에도 추적되도록 고유 ID를 파일에 부여"
+      title="Assign a stable ID so the doc stays tracked across move/rename"
       onClick={async () => {
         setBusy(true);
         try {
           await adoptDoc(path); // live-reload refreshes the view
         } catch (e) {
-          alert("Adopt 실패: " + (e as Error).message);
+          alert("Adopt failed: " + (e as Error).message);
         } finally {
           setBusy(false);
         }
@@ -678,13 +678,13 @@ function ReviewControl({ path }: { path: string }) {
       variant="outline"
       size="sm"
       disabled={busy}
-      title="오늘 날짜로 검토 완료 표시(re-bless) — 신선도 경고 해제"
+      title="Mark reviewed today (re-bless) — clears the freshness warning"
       onClick={async () => {
         setBusy(true);
         try {
           await setDocReview(path, {}); // stamps lastReviewed = today; live-reload refreshes
         } catch (e) {
-          alert("Review 실패: " + (e as Error).message);
+          alert("Review failed: " + (e as Error).message);
         } finally {
           setBusy(false);
         }

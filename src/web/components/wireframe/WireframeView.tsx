@@ -30,7 +30,7 @@ export function WireframeView({ wireframes, path, onSelect, meta, graph, tick }:
   if (!path) {
     return (
       <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">
-        표시할 와이어프레임이 없습니다.
+        No wireframe to show.
       </div>
     );
   }

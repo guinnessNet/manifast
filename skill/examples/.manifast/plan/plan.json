@@ -3,15 +3,15 @@
   "phases": [
     {
       "id": "p1",
-      "name": "MVP 인증",
-      "goal": "로그인 / 회원가입 흐름 완성",
+      "name": "MVP Auth",
+      "goal": "Complete the login / sign-up flow",
       "status": "active",
       "taskIds": ["task-1", "task-2"]
     },
     {
       "id": "p2",
-      "name": "대시보드",
-      "goal": "핵심 지표 시각화",
+      "name": "Dashboard",
+      "goal": "Visualize the key metrics",
       "status": "planned",
       "taskIds": ["task-3", "task-4", "task-5"]
     }

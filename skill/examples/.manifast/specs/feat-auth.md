@@ -2,7 +2,7 @@
 schema: manifast.doc/1
 id: feat-auth
 type: spec
-title: 사용자 인증
+title: User authentication
 status: active
 wireframe: screen-login
 tasks: [task-1, task-2]
@@ -13,17 +13,17 @@ lastReviewed: 2026-06-24
 updatedAt: 2026-06-24
 ---
 
-## 목적
+## Purpose
 
-이메일/비밀번호 로그인을 제공한다.
+Provide email/password login.
 
-## 동작
+## Behavior
 
-- [ ] 이메일 형식 검증
-- [ ] 실패 시 인라인 에러 표시
-- [ ] "로그인 상태 유지" 옵션
+- [ ] Email format validation
+- [ ] Show an inline error on failure
+- [ ] "Keep me signed in" option
 
-## 연결
+## Links
 
-- 와이어프레임: `screen-login`
-- 태스크: `task-1`, `task-2`
+- Wireframe: `screen-login`
+- Tasks: `task-1`, `task-2`

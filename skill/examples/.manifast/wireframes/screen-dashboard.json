@@ -1,7 +1,7 @@
 {
   "schema": "manifast.wireframe/1",
   "id": "screen-dashboard",
-  "name": "대시보드",
+  "name": "Dashboard",
   "device": "desktop",
   "size": { "w": 1440, "h": 1024 },
   "background": "#FFFFFF",

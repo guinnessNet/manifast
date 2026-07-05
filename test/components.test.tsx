@@ -143,9 +143,9 @@ describe("DocRail folder tree", () => {
 
   it("nests docs into collapsible folders with recursive count badges", () => {
     renderRail();
-    const claim = rtl.getByRole("button", { name: /^claim 폴더/ });
+    const claim = rtl.getByRole("button", { name: /^claim folder/ });
     expect(claim).toHaveAttribute("aria-expanded", "true");
-    expect(claim.getAttribute("aria-label")).toMatch(/문서 2개/); // claim holds a + b
+    expect(claim.getAttribute("aria-label")).toMatch(/2 docs/); // claim holds a + b
     expect(rtl.getByText("Claim build")).toBeInTheDocument();
     expect(rtl.getByText("Readme")).toBeInTheDocument(); // root-level file at top level
   });
@@ -153,20 +153,20 @@ describe("DocRail folder tree", () => {
   it("collapsing a folder hides its descendants", () => {
     renderRail();
     expect(rtl.getByText("Claim build")).toBeInTheDocument();
-    fireEvent.click(rtl.getByRole("button", { name: /^docs 폴더/ }));
+    fireEvent.click(rtl.getByRole("button", { name: /^docs folder/ }));
     expect(rtl.queryByText("Claim build")).not.toBeInTheDocument();
-    expect(rtl.queryByRole("button", { name: /^claim 폴더/ })).not.toBeInTheDocument();
+    expect(rtl.queryByRole("button", { name: /^claim folder/ })).not.toBeInTheDocument();
   });
 
   it("search auto-expands folders containing matches", () => {
     renderRail();
-    fireEvent.click(rtl.getByRole("button", { name: "모두 접기" })); // collapse everything
+    fireEvent.click(rtl.getByRole("button", { name: "Collapse all" })); // collapse everything
     expect(rtl.queryByText("Claim build")).not.toBeInTheDocument();
     fireEvent.change(rtl.getByPlaceholderText(/^Search docs…/), { target: { value: "claim build" } });
     expect(rtl.getByText("Claim build")).toBeInTheDocument(); // surfaced despite being collapsed
     // During search folders are static headers (no toggle button) so a click
     // can't silently mutate the persisted collapse state behind the auto-expand.
-    expect(rtl.queryByRole("button", { name: /폴더/ })).toBeNull();
+    expect(rtl.queryByRole("button", { name: /folder/ })).toBeNull();
   });
 });
 

@@ -131,7 +131,7 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false, a
 
   // At scale (e.g. 150+ docs) one-node-per-doc is an unreadable hairball. Collapse
   // docs into folder super-nodes and tasks into their phase, so the map reads as a
-  // ~dozen-node structure overview. The "개별 문서 펼치기" toggle returns to full.
+  // ~dozen-node structure overview. The "Expand docs" toggle returns to full.
   return aggregateDocs ? aggregateOverview(map, ws) : map;
 }
 

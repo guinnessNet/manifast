@@ -1,4 +1,5 @@
-# 옛 로드맵 (2025)
+# Old Roadmap (2025)
 
-`docs/archive/` 경로에 있어서 Manifast가 **자동으로 archived** 로 분류합니다.
-좌측 내비에서 기본적으로 숨겨지고, "아카이브 보기" 토글로 볼 수 있습니다.
+Because it lives under `docs/archive/`, Manifast **classifies it as archived**
+automatically. It is hidden by default in the left nav and can be shown with the
+"Show archive" toggle.

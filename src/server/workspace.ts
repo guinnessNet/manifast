@@ -60,7 +60,7 @@ function normalizeFrontmatter(value: unknown): unknown {
 
 function formatZodError(err: z.ZodError): string {
   const issue = err.issues[0];
-  if (!issue) return "유효하지 않은 형식";
+  if (!issue) return "Invalid format";
   const where = issue.path.length ? issue.path.join(".") + ": " : "";
   return where + issue.message;
 }
@@ -69,7 +69,7 @@ function parseJson(raw: string): { ok: true; value: unknown } | { ok: false; err
   try {
     return { ok: true, value: JSON.parse(raw) };
   } catch (e) {
-    return { ok: false, error: `JSON 파싱 실패: ${(e as Error).message}` };
+    return { ok: false, error: `JSON parse failed: ${(e as Error).message}` };
   }
 }
 
@@ -165,7 +165,7 @@ async function readWireframeMeta(manifastDir: string, file: string): Promise<Wir
   const rel = `.manifast/wireframes/${file}`;
   const fb = fileBase(file);
   const raw = await readText(path.join(manifastDir, "wireframes", file));
-  if (raw == null) return { path: rel, id: fb, name: fb, device: "desktop", ok: false, error: "파일을 읽을 수 없음" };
+  if (raw == null) return { path: rel, id: fb, name: fb, device: "desktop", ok: false, error: "Cannot read file" };
   const parsed = parseJson(raw);
   if (!parsed.ok) return { path: rel, id: fb, name: fb, device: "desktop", ok: false, error: parsed.error };
   const result = WireframeSchema.safeParse(parsed.value);
@@ -338,7 +338,7 @@ async function computeFreshness(projectDir: string, meta: DocMeta): Promise<DocF
       const sst = await stat(sAbs).catch(() => null);
       if (sst && Math.floor(sst.mtimeMs / dayMs) > baseDay) {
         stale = true;
-        reasons.push(`${s} 변경됨`);
+        reasons.push(`${s} changed`);
       }
     }
   }
@@ -346,7 +346,7 @@ async function computeFreshness(projectDir: string, meta: DocMeta): Promise<DocF
     const ageDays = (Date.now() - baseMs) / 86_400_000;
     if (ageDays > meta.reviewBy) {
       stale = true;
-      reasons.push(`검토 기한 초과(${Math.floor(ageDays)}d > ${meta.reviewBy}d)`);
+      reasons.push(`Review overdue (${Math.floor(ageDays)}d > ${meta.reviewBy}d)`);
     }
   }
   return { stale, score: stale ? 0 : 100, reason: reasons.join("; ") || undefined };
@@ -359,7 +359,7 @@ async function computeDocMeta(rel: string, abs: string, st: Stats | null): Promi
   const fsUpdated = st ? st.mtime.toISOString().slice(0, 10) : undefined;
   const raw = await readHead(abs);
   if (raw == null) {
-    return { path: rel, id: slugFromPath(rel), type: "doc", title: fileBase(rel), status: "none", source, ok: false, error: "파일을 읽을 수 없음" };
+    return { path: rel, id: slugFromPath(rel), type: "doc", title: fileBase(rel), status: "none", source, ok: false, error: "Cannot read file" };
   }
 
   let fm: Record<string, unknown> = {};
@@ -370,7 +370,7 @@ async function computeDocMeta(rel: string, abs: string, st: Stats | null): Promi
     fm = normalizeFrontmatter(g.data ?? {}) as Record<string, unknown>;
     body = g.content;
   } catch (e) {
-    yamlWarning = `frontmatter YAML 파싱 실패: ${(e as Error).message}`;
+    yamlWarning = `frontmatter YAML parse failed: ${(e as Error).message}`;
   }
 
   const type = inferDocType(rel, fm);
@@ -540,7 +540,7 @@ async function readDiagramMeta(manifastDir: string, file: string): Promise<Diagr
   const fb = fileBase(file);
   const raw = await readText(path.join(manifastDir, "diagrams", file));
   const empty = { path: rel, id: fb, title: fb, kind: "diagram", nodeCount: 0, edgeCount: 0 };
-  if (raw == null) return { ...empty, ok: false, error: "파일을 읽을 수 없음" };
+  if (raw == null) return { ...empty, ok: false, error: "Cannot read file" };
   const parsed = parseJson(raw);
   if (!parsed.ok) return { ...empty, ok: false, error: parsed.error };
   const r = DiagramFileSchema.safeParse(parsed.value);
@@ -623,13 +623,13 @@ export async function readFileResource(projectDir: string, relPath: string): Pro
   const kind = classifyPath(relPath);
   const abs = resolveSafe(projectDir, relPath);
   if (!abs) {
-    if (kind === "doc") return { kind, path: relPath, frontmatter: null, markdown: "", ok: false, error: "잘못된 경로" };
-    return { kind: kind === "tasks" || kind === "plan" || kind === "diagram" ? kind : "wireframe", path: relPath, data: null, ok: false, error: "잘못된 경로" } as FileResponse;
+    if (kind === "doc") return { kind, path: relPath, frontmatter: null, markdown: "", ok: false, error: "Invalid path" };
+    return { kind: kind === "tasks" || kind === "plan" || kind === "diagram" ? kind : "wireframe", path: relPath, data: null, ok: false, error: "Invalid path" } as FileResponse;
   }
   const raw = await readText(abs);
 
   if (kind === "doc") {
-    if (raw == null) return { kind, path: relPath, frontmatter: null, markdown: "", ok: false, error: "파일을 읽을 수 없음" };
+    if (raw == null) return { kind, path: relPath, frontmatter: null, markdown: "", ok: false, error: "Cannot read file" };
     try {
       const g = matter(raw);
       const fm = normalizeFrontmatter(g.data ?? {}) as Record<string, unknown>;
@@ -637,12 +637,12 @@ export async function readFileResource(projectDir: string, relPath: string): Pro
       const nativeWarning = fm.schema === "manifast.doc/1" && !result.success ? formatZodError(result.error) : undefined;
       return { kind, path: relPath, frontmatter: fm, markdown: g.content, ok: true, warning: nativeWarning };
     } catch (e) {
-      return { kind, path: relPath, frontmatter: {}, markdown: raw, ok: true, warning: `frontmatter YAML 파싱 실패: ${(e as Error).message}` };
+      return { kind, path: relPath, frontmatter: {}, markdown: raw, ok: true, warning: `frontmatter YAML parse failed: ${(e as Error).message}` };
     }
   }
 
   if (raw == null) {
-    return { kind: kind === "tasks" || kind === "plan" || kind === "diagram" ? kind : "wireframe", path: relPath, data: null, ok: false, error: "파일을 읽을 수 없음" } as FileResponse;
+    return { kind: kind === "tasks" || kind === "plan" || kind === "diagram" ? kind : "wireframe", path: relPath, data: null, ok: false, error: "Cannot read file" } as FileResponse;
   }
   const parsed = parseJson(raw);
   if (!parsed.ok) {

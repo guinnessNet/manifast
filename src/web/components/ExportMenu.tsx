@@ -56,7 +56,7 @@ function Dropdown({ items }: { items: Item[] }) {
       await fn();
     } catch (e) {
       console.error(e);
-      alert("Export 실패: " + (e as Error).message);
+      alert("Export failed: " + (e as Error).message);
     } finally {
       setBusy(false);
       setOpen(false);
@@ -101,7 +101,7 @@ export function WireframeExportMenu({
   allWireframes?: WireframeMeta[];
 }) {
   const name = screen.id || screen.name || "wireframe";
-  const notReady = "화면이 아직 렌더되지 않았습니다";
+  const notReady = "The screen hasn't rendered yet";
   const items: Item[] = [
     { label: "PNG", icon: <FileImage size={14} />, onClick: () => exportPNG(must(screenRef.current, notReady), name) },
     { label: "SVG", icon: <FileCode size={14} />, onClick: () => exportSVG(must(screenRef.current, notReady), name) },
@@ -110,7 +110,7 @@ export function WireframeExportMenu({
   ];
   if (allWireframes && allWireframes.length > 1) {
     items.push({
-      label: `PNG 전체 (${allWireframes.length}장 ZIP)`,
+      label: `PNG all (${allWireframes.length} as ZIP)`,
       icon: <Archive size={14} />,
       onClick: () => exportAllScreensPNG(allWireframes),
     });
@@ -132,7 +132,7 @@ export function MapExportMenu({
   // serialization would lose colors; html-to-image rasterizes computed styles fine.
   // Export against the CURRENT theme's canvas color so dark-mode maps don't land
   // half-dark on stark white.
-  const notReady = "맵이 아직 렌더되지 않았습니다";
+  const notReady = "The map hasn't rendered yet";
   const items: Item[] = [
     { label: "PNG", icon: <FileImage size={14} />, onClick: () => exportPNG(must(contentRef.current, notReady), name, themeBackground()) },
     { label: "SVG", icon: <FileCode size={14} />, onClick: () => exportSVG(must(contentRef.current, notReady), name, themeBackground()) },
@@ -150,7 +150,7 @@ export function DocExportMenu({
   path: string;
   name: string;
 }) {
-  const notReady = "문서가 아직 렌더되지 않았습니다";
+  const notReady = "The document hasn't rendered yet";
   return (
     <Dropdown
       items={[
@@ -175,7 +175,7 @@ export function ZipButton({ projectName }: { projectName: string }) {
           await exportZip(projectName);
         } catch (e) {
           console.error(e);
-          alert("ZIP export 실패: " + (e as Error).message);
+          alert("ZIP export failed: " + (e as Error).message);
         } finally {
           setBusy(false);
         }

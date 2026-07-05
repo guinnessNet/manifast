@@ -1,7 +1,7 @@
 {
   "schema": "manifast.wireframe/1",
   "id": "screen-login",
-  "name": "로그인",
+  "name": "Login",
   "device": "mobile",
   "size": { "w": 390, "h": 844 },
   "background": "#FFFFFF",
@@ -10,7 +10,7 @@
       "id": "n1",
       "type": "Text",
       "frame": { "x": 24, "y": 96, "w": 342, "h": 36 },
-      "content": "로그인",
+      "content": "Login",
       "role": "h1",
       "align": "left"
     },
@@ -18,14 +18,14 @@
       "id": "n2",
       "type": "Text",
       "frame": { "x": 24, "y": 136, "w": 342, "h": 20 },
-      "content": "계정에 로그인하세요",
+      "content": "Sign in to your account",
       "role": "caption"
     },
     {
       "id": "n3",
       "type": "Input",
       "frame": { "x": 24, "y": 176, "w": 342, "h": 62 },
-      "label": "이메일",
+      "label": "Email",
       "placeholder": "you@example.com",
       "kind": "email"
     },
@@ -33,21 +33,21 @@
       "id": "n4",
       "type": "Input",
       "frame": { "x": 24, "y": 250, "w": 342, "h": 62 },
-      "label": "비밀번호",
+      "label": "Password",
       "kind": "password"
     },
     {
       "id": "n5",
       "type": "Checkbox",
       "frame": { "x": 24, "y": 328, "w": 200, "h": 20 },
-      "label": "로그인 상태 유지",
+      "label": "Stay signed in",
       "checked": true
     },
     {
       "id": "n6",
       "type": "Button",
       "frame": { "x": 24, "y": 372, "w": 342, "h": 48 },
-      "label": "로그인",
+      "label": "Login",
       "variant": "primary",
       "size": "lg"
     },
@@ -55,7 +55,7 @@
       "id": "n7",
       "type": "Button",
       "frame": { "x": 24, "y": 432, "w": 342, "h": 44 },
-      "label": "회원가입",
+      "label": "Sign up",
       "variant": "secondary"
     },
     {
@@ -67,7 +67,7 @@
       "id": "n9",
       "type": "Button",
       "frame": { "x": 24, "y": 516, "w": 342, "h": 44 },
-      "label": "비밀번호를 잊으셨나요?",
+      "label": "Forgot your password?",
       "variant": "ghost"
     }
   ]

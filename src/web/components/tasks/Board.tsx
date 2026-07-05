@@ -41,12 +41,12 @@ export function Board({ tasksData, graph, highlightTask }: BoardProps) {
   }, [highlightTask]);
 
   if (!tasksData) {
-    return <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">tasks/tasks.json 이 없습니다.</div>;
+    return <div className="grid h-full place-items-center text-sm text-[var(--text-faint)]">No tasks/tasks.json yet.</div>;
   }
   if (!tasksData.ok) {
     return (
       <div className="p-4">
-        <ErrorBanner path={tasksData.path} message={tasksData.error ?? "tasks.json 파싱 실패"} />
+        <ErrorBanner path={tasksData.path} message={tasksData.error ?? "Failed to parse tasks.json"} />
       </div>
     );
   }

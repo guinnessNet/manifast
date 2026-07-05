@@ -121,7 +121,7 @@ export default function App() {
     return (
       <div id="mf-root" data-theme={theme} data-accent={accent} className="grid h-screen place-items-center p-8">
         {error ? (
-          <ErrorBanner message={`서버에 연결할 수 없습니다: ${error}`} />
+          <ErrorBanner message={`Cannot connect to server: ${error}`} />
         ) : (
           <p className="text-sm text-[var(--text-faint)]">{loading ? "Loading…" : ""}</p>
         )}
