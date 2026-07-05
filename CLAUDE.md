@@ -84,13 +84,24 @@ and read-only. Still **no in-app AI / MCP / DB / auth.** (See DESIGN 부록 B.)
 
 ## Release / refresh
 
-To ship changes: **bump `version` in package.json** → `npm run build`. Then either:
+To ship changes: **bump `version` in package.json** → **update `README.md`
+(version badge + any "what's new" content)** and add a `CHANGELOG.md` entry →
+`npm run build`. Then either:
 
 - **Publish to npm** — push a `v*` tag; the tag-gated CI job runs `prepublishOnly`
-  (`typecheck && check && test && build`) then `npm publish`. Or publish locally
-  with `npm publish` after `npm login`.
+  (`check:readme && typecheck && check && test && build`) then `npm publish`. Or
+  publish locally with `npm publish` after `npm login`.
 - **Refresh the local global install** — `npm install -g .`. Installing the **same**
   version reports "up to date" and will NOT refresh — always bump first.
+
+**Rule — README ships with every version bump.** `prepublishOnly` runs
+`check:readme` (`scripts/check-readme-version.mjs`), which fails the publish if
+the README `> vX.Y.Z ·` badge doesn't match `package.json`. So a version bump
+that forgets the README can't publish. The npm page README is a publish-time
+snapshot (its *images* hot-link to `main` and refresh on push, but the *text*
+only syncs on republish) — keep them in lockstep by updating README in the same
+release as the bump. If a code release lands without a README update, follow it
+with a patch bump that syncs the README (e.g. 1.3.0 → 1.3.1).
 
 ## Verifying real behavior
 

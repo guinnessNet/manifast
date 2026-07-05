@@ -1,6 +1,6 @@
 {
   "name": "manifast",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Local, read-only visualizer + live-reload + export for AI-authored wireframes and dev docs (.manifast/).",
   "type": "module",
   "license": "MIT",
@@ -56,7 +56,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "start": "node dist/cli/index.js",
-    "prepublishOnly": "npm run typecheck && npm run check && npm test && npm run build"
+    "check:readme": "node scripts/check-readme-version.mjs",
+    "prepublishOnly": "npm run check:readme && npm run typecheck && npm run check && npm test && npm run build"
   },
   "dependencies": {
     "@fastify/static": "^9.1.3",

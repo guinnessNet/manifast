@@ -4,6 +4,20 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
+## 1.3.1 — README/스크린샷 1.3.0 동기화 + 릴리스 가드 (2026-07-06)
+
+기능 변경 없음(문서/릴리스 위생). npm 페이지 README를 1.3.0 내용으로 맞추기 위한
+재게시.
+
+- **README를 1.3.0 기준으로 갱신** — 버전 배지, 와이어프레임 드래그 팬·전체 lucide
+  아이콘, Docs 관련/참조됨 칩·본문 상대링크, Map의 kind별 색+아이콘+범례·적응
+  레이아웃·CJK 라벨 실측, Export의 전체 화면 PNG ZIP·테마 반영·유니코드 파일명,
+  본문 링크 관계 인식·루트 파일 고아 제외.
+- **스크린샷 재촬영** — `map`/`wireframes`/`docs`를 1.3.0 렌더로 교체.
+- **릴리스 가드 추가** — `prepublishOnly`에 `check:readme`를 넣어, README 버전
+  배지가 `package.json`과 다르면 publish가 실패한다. 버전 범프 시 README 갱신을
+  강제하는 장치(`scripts/check-readme-version.mjs`).
+
 ## 1.3.0 — 관계도/다이어그램 렌더링 정밀화 + export 신뢰성 (2026-07-05)
 
 실사용 피드백("문서 관계·구조도가 제대로/예쁘게 안 그려진다, export 품질 불확실")을
