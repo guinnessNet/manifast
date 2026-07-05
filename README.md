@@ -4,7 +4,7 @@
 
 ![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
 
-> v1.2.3 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
+> v1.3.0 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
 
 **How it works:** an AI coding agent ([Claude Code](https://www.claude.com/product/claude-code)
 or [Codex](https://developers.openai.com/codex/cli/)) writes structured files into a
@@ -142,20 +142,25 @@ bundled guide/schema changes. Re-running `init` is safe.
 
 ## The views
 
-- **Wireframes** — infinite canvas (space- or middle-drag to pan, ⌘/Ctrl+scroll
-  to zoom, 10–400%) with a bottom thumbnail strip. Low-fidelity grayscale render
-  of an 18-node catalog (Box, Text, Button, Input, Textarea, Checkbox, Radio,
-  Toggle, Select, Image, Avatar, Icon, Divider, Badge, Navbar, Table, List, Tabs).
+- **Wireframes** — infinite canvas (drag to pan, ⌘/Ctrl+scroll to zoom, 10–400%,
+  auto-refit on resize) with a bottom thumbnail strip. Low-fidelity grayscale
+  render of an 18-node catalog (Box, Text, Button, Input, Textarea, Checkbox,
+  Radio, Toggle, Select, Image, Avatar, Icon, Divider, Badge, Navbar, Table,
+  List, Tabs). `Icon` accepts any [lucide](https://lucide.dev) name.
 - **Docs** — a searchable doc rail + reader; PRD/spec Markdown (GFM: tables, task
   lists, highlighted code) with a frontmatter header card, linked-wireframe
-  thumbnail, and task chips.
+  thumbnail, task chips, and **related / referenced-by** doc chips. Relative
+  `.md` links in the body navigate inside the app.
 - **Tasks** — fixed 4-column kanban (todo / in_progress / done / blocked) with
   priority dots, spec/wireframe link chips, and dependency chips.
 - **Plan** — vertical roadmap of phases with per-phase task progress.
-- **Map** — relationship graph (auto-laid-out with dagre, pan/zoom) of how docs,
-  wireframes, tasks and the plan connect; see [Maps & diagrams](#maps--diagrams-v3).
+- **Map** — relationship graph of how docs, wireframes, tasks and the plan
+  connect. Nodes are typed (per-kind color + icon + legend), edges are colored
+  and labelled by relation kind, and relationship maps lay out radially (hub +
+  rings) while flows/architecture use directional dagre; see
+  [Maps & diagrams](#maps--diagrams-v3).
 - **User Flow** — directed flow diagrams (`kind: "flow"`) with start/page/action/
-  decision/end node types and labelled edges.
+  decision/end node types (decisions render as diamonds) and labelled edges.
 - **Tree** — hierarchy diagrams (`kind: "tree"`) for feature trees, sitemaps, and
   requirement breakdowns.
 
@@ -169,11 +174,16 @@ orange / blue) from the header; both persist locally and default to your OS them
 
 Per-view **Export** menus + a global **.zip** button in the header:
 
-- Wireframe → PNG (2×), SVG, HTML (self-contained inline-style), JSON (original)
-- Doc → Markdown (original), HTML (self-contained), Print/PDF (browser print)
+- Wireframe → PNG (2×), SVG, HTML (self-contained inline-style), JSON (original),
+  **all screens → ZIP of PNGs** (one click for a multi-screen flow)
+- Map / diagram → PNG, SVG (exported against the current theme so edges stay
+  visible), JSON for authored diagrams
+- Doc → Markdown (original), HTML (self-contained), Print/PDF (standalone print
+  window — no app chrome)
 - Whole workspace → ZIP of `.manifast/`
 
-All export runs in the browser; the server only serves files.
+Filenames keep non-ASCII titles; all export runs in the browser and the server
+only serves files.
 
 ## Document management (v2)
 
@@ -196,9 +206,12 @@ docs, with lifecycle tracking:
   `uid` into its frontmatter. The doc is then tracked by that `uid` across folder
   moves/renames; links keep resolving. (Distinct from the human-friendly `id`.)
 - **Relationships & orphans** — connect docs to each other / to specs with
-  frontmatter `related: [id, …]` (on top of spec→wireframe/tasks and task→spec).
-  The **Map** flags *orphan* docs (no link in or out) so loose docs are easy to
-  find and wire up; docs that share a `sources` code path count as related too.
+  frontmatter `related: [id, …]` (on top of spec→wireframe/tasks and task→spec),
+  or just link them in the Markdown body — relative `[text](./other.md)` links
+  are auto-detected as relations. The **Map** flags *orphan* docs (no link in or
+  out) so loose docs are easy to find and wire up; docs that share a `sources`
+  code path count as related too, and root files (README/CLAUDE/AGENTS) are
+  exempt from the orphan warning.
 
 This is the one place the app **writes** files — and only frontmatter
 (`uid` + status/metadata), never the document body. It's an intentional, scoped
@@ -207,11 +220,15 @@ Full in-app body editing is not included.
 
 ## Maps & diagrams (v3)
 
-The **Map** view visualizes relationships as a node/edge graph (auto-laid-out with
-dagre, pan/zoom):
+The **Map** view visualizes relationships as a node/edge graph. Nodes carry a
+per-kind color + icon (with a legend), edges are colored and labelled by relation
+kind, and the layout adapts to the content — relationship maps use a radial hub +
+rings, hierarchies a tidy tree, flows/architecture directional dagre lanes.
+Labels are measured for full-width scripts (Korean, CJK) so they don't truncate.
 
 - **Auto project map** — built by the app from existing links (doc ↔ wireframe ↔
-  task ↔ plan) + `uid`, no file needed. Click a node to jump to that item.
+  task ↔ plan, frontmatter `related`, and Markdown body links) + `uid`, no file
+  needed. Click a node to jump to that item.
 - **Agent-authored diagrams** — when you ask Claude/Codex to "diagram the
   architecture" or "map the docs", it analyzes the repo (incl. root `CLAUDE.md` /
   `AGENTS.md` / `README.md`, now ingested) and writes
