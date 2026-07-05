@@ -3,6 +3,9 @@ import type { Screen, WireNode, BoxNode } from "@shared/schema/wireframe";
 import { PALETTE, FONT } from "./palette";
 import { LeafContent } from "./nodes";
 
+// card/section clip their children: full-bleed images respect the rounded
+// corners, and an agent's frame-math mistake stays inside one card instead of
+// bleeding across the screen. `plain` stays unclipped (pure grouping).
 function boxSurface(variant?: string): CSSProperties {
   if (variant === "card")
     return {
@@ -10,9 +13,10 @@ function boxSurface(variant?: string): CSSProperties {
       border: `1px solid ${PALETTE.cardBorder}`,
       borderRadius: 10,
       boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
+      overflow: "hidden",
     };
   if (variant === "section")
-    return { background: PALETTE.sectionBg, borderRadius: 8 };
+    return { background: PALETTE.sectionBg, borderRadius: 8, overflow: "hidden" };
   return {}; // plain: grouping only, no surface
 }
 

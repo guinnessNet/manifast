@@ -28,7 +28,7 @@
     },
     { "id": "title", "type": "Text", "frame": { "x": 280, "y": 88, "w": 400, "h": 36 }, "content": "Dashboard", "role": "h1" },
     { "id": "subtitle", "type": "Text", "frame": { "x": 280, "y": 128, "w": 400, "h": 16 }, "content": "Updated just now", "role": "caption" },
-    { "id": "search", "type": "Input", "frame": { "x": 900, "y": 84, "w": 360, "h": 40 }, "placeholder": "Search…", "kind": "search" },
+    { "id": "search", "type": "Input", "frame": { "x": 1020, "y": 84, "w": 360, "h": 40 }, "placeholder": "Search…", "kind": "search" },
     { "id": "tabs", "type": "Tabs", "frame": { "x": 280, "y": 168, "w": 620, "h": 40 }, "tabs": ["Overview", "Activity", "Team"], "activeIndex": 0 },
     {
       "id": "kpi",
@@ -54,7 +54,8 @@
         { "id": "pf-role", "type": "Text", "frame": { "x": 84, "y": 48, "w": 200, "h": 16 }, "content": "Administrator", "role": "caption" },
         { "id": "pf-toggle", "type": "Toggle", "frame": { "x": 20, "y": 90, "w": 220, "h": 24 }, "label": "Notifications", "on": true },
         { "id": "pf-check", "type": "Checkbox", "frame": { "x": 20, "y": 120, "w": 240, "h": 20 }, "label": "Weekly digest", "checked": true },
-        { "id": "pf-radio", "type": "Radio", "frame": { "x": 20, "y": 146, "w": 240, "h": 20 }, "label": "Compact mode" }
+        { "id": "pf-radio-light", "type": "Radio", "frame": { "x": 20, "y": 146, "w": 110, "h": 20 }, "label": "Light", "checked": true },
+        { "id": "pf-radio-dark", "type": "Radio", "frame": { "x": 140, "y": 146, "w": 110, "h": 20 }, "label": "Dark" }
       ]
     },
     { "id": "chart", "type": "Image", "frame": { "x": 1080, "y": 228, "w": 300, "h": 180 }, "ratio": "3:2", "label": "Chart" },
@@ -65,12 +66,36 @@
       "variant": "card",
       "frame": { "x": 1080, "y": 432, "w": 300, "h": 320 },
       "children": [
-        { "id": "nt-label", "type": "Text", "frame": { "x": 20, "y": 16, "w": 260, "h": 16 }, "content": "Quick note", "role": "label" },
+        { "id": "nt-label", "type": "Text", "frame": { "x": 20, "y": 16, "w": 236, "h": 16 }, "content": "Quick note", "role": "label" },
+        { "id": "nt-icon", "type": "Icon", "frame": { "x": 260, "y": 12, "w": 20, "h": 20 }, "name": "settings", "size": 18 },
         { "id": "nt-area", "type": "Textarea", "frame": { "x": 20, "y": 40, "w": 260, "h": 120 }, "placeholder": "Type a note…", "rows": 4 },
-        { "id": "nt-select", "type": "Select", "frame": { "x": 20, "y": 176, "w": 260, "h": 40 }, "label": "Assignee", "placeholder": "Choose", "options": ["Jane", "John", "Sam"] },
-        { "id": "nt-save", "type": "Button", "frame": { "x": 20, "y": 228, "w": 120, "h": 40 }, "label": "Save", "variant": "primary" },
-        { "id": "nt-cancel", "type": "Button", "frame": { "x": 148, "y": 228, "w": 120, "h": 40 }, "label": "Cancel", "variant": "secondary" },
-        { "id": "nt-icon", "type": "Icon", "frame": { "x": 20, "y": 284, "w": 24, "h": 24 }, "name": "settings", "size": 24 }
+        { "id": "nt-select", "type": "Select", "frame": { "x": 20, "y": 172, "w": 260, "h": 62 }, "label": "Assignee", "placeholder": "Choose", "options": ["Jane", "John", "Sam"] },
+        { "id": "nt-save", "type": "Button", "frame": { "x": 20, "y": 252, "w": 120, "h": 40 }, "label": "Save", "variant": "primary" },
+        { "id": "nt-cancel", "type": "Button", "frame": { "x": 148, "y": 252, "w": 120, "h": 40 }, "label": "Cancel", "variant": "secondary" }
+      ]
+    },
+    {
+      "id": "activity",
+      "type": "Box",
+      "variant": "card",
+      "frame": { "x": 280, "y": 776, "w": 760, "h": 208 },
+      "children": [
+        { "id": "ac-label", "type": "Text", "frame": { "x": 20, "y": 16, "w": 300, "h": 16 }, "content": "Recent activity", "role": "label" },
+        { "id": "ac-list", "type": "List", "frame": { "x": 12, "y": 44, "w": 736, "h": 152 }, "items": 3, "withAvatar": true }
+      ]
+    },
+    {
+      "id": "team",
+      "type": "Box",
+      "variant": "card",
+      "frame": { "x": 1080, "y": 776, "w": 300, "h": 208 },
+      "children": [
+        { "id": "tm-label", "type": "Text", "frame": { "x": 20, "y": 16, "w": 200, "h": 16 }, "content": "Team", "role": "label" },
+        { "id": "tm-a1", "type": "Avatar", "frame": { "x": 20, "y": 48, "w": 44, "h": 44 }, "shape": "circle" },
+        { "id": "tm-a2", "type": "Avatar", "frame": { "x": 72, "y": 48, "w": 44, "h": 44 }, "shape": "circle" },
+        { "id": "tm-a3", "type": "Avatar", "frame": { "x": 124, "y": 48, "w": 44, "h": 44 }, "shape": "square" },
+        { "id": "tm-caption", "type": "Text", "frame": { "x": 20, "y": 104, "w": 260, "h": 16 }, "content": "3 members online", "role": "caption" },
+        { "id": "tm-invite", "type": "Button", "frame": { "x": 20, "y": 140, "w": 100, "h": 32 }, "label": "Invite", "variant": "secondary", "size": "sm" }
       ]
     }
   ]

@@ -19,6 +19,9 @@
   --text: #18181b; --text-muted: #52525b; --text-faint: #6b6b76;
   --accent: #6366f1; --accent-fg: #ffffff; --accent-subtle: #eef0fe; --accent-border: #c7c9f9; --accent-soft: #f3f4fe;
   --grid-dot: #e4e4e8;
+  /* Diagram/map edges need real contrast (wire-* tokens are wireframe placeholders,
+     far too faint for relationship lines). */
+  --edge: #99a0ae; --edge-label: #5d6470;
   --wire-fill: #f0f0f2; --wire-panel: #fafafb; --wire-line: #e2e2e6; --wire-text: #d6d6db; --wire-strong: #c2c2c9; --wire-button: #b4b4bc;
   --err-bg: #fef3f2; --err-border: #fcd9d4; --err-text: #b42318;
   --ok: #16a34a; --ok-bg: #e9f7ef; --ok-border: #bce8cd;
@@ -31,6 +34,7 @@
   --text: #ededf0; --text-muted: #9a9aa4; --text-faint: #7a7a84;
   --accent: #7c7ff7; --accent-fg: #0b0b0d; --accent-subtle: #1d1d38; --accent-border: #3a3a6b; --accent-soft: #17172b;
   --grid-dot: #1f1f24;
+  --edge: #62687a; --edge-label: #a7adbb;
   --wire-fill: #1c1c20; --wire-panel: #161619; --wire-line: #2a2a30; --wire-text: #34343c; --wire-strong: #44444e; --wire-button: #3c3c46;
   --err-bg: #251315; --err-border: #5a2424; --err-text: #f8a39a;
   --ok: #4ade80; --ok-bg: #10271c; --ok-border: #1f5036;

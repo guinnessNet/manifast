@@ -10,15 +10,25 @@ import {
   Archive,
 } from "lucide-react";
 import type { Screen } from "@shared/schema/wireframe";
+import type { WireframeMeta } from "@shared/types";
 import { Button } from "./ui/button";
 import {
   exportPNG,
   exportSVG,
   exportNodeHTML,
+  printNodeHTML,
   exportRaw,
   exportZip,
+  themeBackground,
   PROSE_CSS,
 } from "../lib/export";
+import { exportAllScreensPNG } from "./wireframe/exportAllScreens";
+
+/** Reject with a visible message instead of silently closing the menu. */
+function must<T>(v: T | null | undefined, msg: string): T {
+  if (!v) throw new Error(msg);
+  return v;
+}
 
 interface Item {
   label: string;
@@ -82,22 +92,30 @@ export function WireframeExportMenu({
   screen,
   screenRef,
   path,
+  allWireframes,
 }: {
   screen: Screen;
   screenRef: RefObject<HTMLDivElement | null>;
   path: string;
+  /** When >1 screens exist, offer a one-click ZIP of every screen's PNG. */
+  allWireframes?: WireframeMeta[];
 }) {
   const name = screen.id || screen.name || "wireframe";
-  return (
-    <Dropdown
-      items={[
-        { label: "PNG", icon: <FileImage size={14} />, onClick: () => { if (screenRef.current) return exportPNG(screenRef.current, name); } },
-        { label: "SVG", icon: <FileCode size={14} />, onClick: () => { if (screenRef.current) return exportSVG(screenRef.current, name); } },
-        { label: "HTML", icon: <FileCode size={14} />, onClick: () => { if (screenRef.current) exportNodeHTML(screenRef.current, name); } },
-        { label: "JSON", icon: <FileJson size={14} />, onClick: () => exportRaw(path, `${name}.json`, "application/json") },
-      ]}
-    />
-  );
+  const notReady = "화면이 아직 렌더되지 않았습니다";
+  const items: Item[] = [
+    { label: "PNG", icon: <FileImage size={14} />, onClick: () => exportPNG(must(screenRef.current, notReady), name) },
+    { label: "SVG", icon: <FileCode size={14} />, onClick: () => exportSVG(must(screenRef.current, notReady), name) },
+    { label: "HTML", icon: <FileCode size={14} />, onClick: () => exportNodeHTML(must(screenRef.current, notReady), name) },
+    { label: "JSON", icon: <FileJson size={14} />, onClick: () => exportRaw(path, `${name}.json`, "application/json") },
+  ];
+  if (allWireframes && allWireframes.length > 1) {
+    items.push({
+      label: `PNG 전체 (${allWireframes.length}장 ZIP)`,
+      icon: <Archive size={14} />,
+      onClick: () => exportAllScreensPNG(allWireframes),
+    });
+  }
+  return <Dropdown items={items} />;
 }
 
 export function MapExportMenu({
@@ -112,9 +130,12 @@ export function MapExportMenu({
 }) {
   // PNG/SVG only: map nodes use CSS vars (var(--accent) …) so standalone-HTML
   // serialization would lose colors; html-to-image rasterizes computed styles fine.
+  // Export against the CURRENT theme's canvas color so dark-mode maps don't land
+  // half-dark on stark white.
+  const notReady = "맵이 아직 렌더되지 않았습니다";
   const items: Item[] = [
-    { label: "PNG", icon: <FileImage size={14} />, onClick: () => { if (contentRef.current) return exportPNG(contentRef.current, name); } },
-    { label: "SVG", icon: <FileCode size={14} />, onClick: () => { if (contentRef.current) return exportSVG(contentRef.current, name); } },
+    { label: "PNG", icon: <FileImage size={14} />, onClick: () => exportPNG(must(contentRef.current, notReady), name, themeBackground()) },
+    { label: "SVG", icon: <FileCode size={14} />, onClick: () => exportSVG(must(contentRef.current, notReady), name, themeBackground()) },
   ];
   if (path) items.push({ label: "JSON", icon: <FileJson size={14} />, onClick: () => exportRaw(path, `${name}.json`, "application/json") });
   return <Dropdown items={items} />;
@@ -129,12 +150,13 @@ export function DocExportMenu({
   path: string;
   name: string;
 }) {
+  const notReady = "문서가 아직 렌더되지 않았습니다";
   return (
     <Dropdown
       items={[
         { label: "Markdown", icon: <FileText size={14} />, onClick: () => exportRaw(path, `${name}.md`, "text/markdown") },
-        { label: "HTML", icon: <FileCode size={14} />, onClick: () => { if (docRef.current) exportNodeHTML(docRef.current, name, PROSE_CSS); } },
-        { label: "Print / PDF", icon: <Printer size={14} />, onClick: () => window.print() },
+        { label: "HTML", icon: <FileCode size={14} />, onClick: () => exportNodeHTML(must(docRef.current, notReady), name, PROSE_CSS) },
+        { label: "Print / PDF", icon: <Printer size={14} />, onClick: () => printNodeHTML(must(docRef.current, notReady), name, PROSE_CSS) },
       ]}
     />
   );

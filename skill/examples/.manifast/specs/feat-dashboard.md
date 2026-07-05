@@ -6,6 +6,10 @@ title: 대시보드
 status: active
 wireframe: screen-dashboard
 tasks: [task-3, task-4]
+sources: [src/dashboard/index.ts]
+owner: demo
+reviewBy: 90
+lastReviewed: 2026-06-24
 updatedAt: 2026-06-24
 ---
 

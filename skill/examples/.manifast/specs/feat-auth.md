@@ -6,6 +6,10 @@ title: 사용자 인증
 status: active
 wireframe: screen-login
 tasks: [task-1, task-2]
+sources: [src/auth/login.ts]
+owner: demo
+reviewBy: 90
+lastReviewed: 2026-06-24
 updatedAt: 2026-06-24
 ---
 

@@ -1,5 +1,6 @@
 import type { WorkspaceDTO, WireframeMeta, DocMeta } from "@shared/types";
 import type { Task } from "@shared/schema/tasks";
+import { docKeyResolver } from "./graph";
 
 export interface LinkGraph {
   hasWireframe: (id: string) => boolean;
@@ -14,6 +15,10 @@ export interface LinkGraph {
   specsForWireframe: (wfId: string) => DocMeta[];
   /** Tasks that point at a wireframe via wireframeId. */
   tasksForWireframe: (wfId: string) => Task[];
+  /** Outgoing doc→doc ties: frontmatter `related` + markdown body links. */
+  relatedForDoc: (docId: string) => DocMeta[];
+  /** Incoming doc→doc ties: docs whose related/links/deprecatedBy point here. */
+  backlinksForDoc: (docId: string) => DocMeta[];
 }
 
 export function buildLinkGraph(ws: WorkspaceDTO): LinkGraph {
@@ -28,6 +33,38 @@ export function buildLinkGraph(ws: WorkspaceDTO): LinkGraph {
     if (d.uid) docById.set(d.uid, d);
   }
   const taskById = new Map(tasks.map((t) => [t.id, t]));
+
+  // doc↔doc adjacency (canonical ids) from `related`, body links and deprecatedBy.
+  const resolveDoc = docKeyResolver(ws);
+  const docByPath = new Map(docs.map((d) => [d.path, d]));
+  const canonicalById = new Map(docs.map((d) => [d.id, d]));
+  const outgoing = new Map<string, Set<string>>();
+  const incoming = new Map<string, Set<string>>();
+  const tie = (fromId: string, toId: string) => {
+    if (fromId === toId) return;
+    let o = outgoing.get(fromId);
+    if (!o) outgoing.set(fromId, (o = new Set()));
+    o.add(toId);
+    let i = incoming.get(toId);
+    if (!i) incoming.set(toId, (i = new Set()));
+    i.add(fromId);
+  };
+  for (const d of docs) {
+    for (const rel of d.related ?? []) {
+      const r = resolveDoc(rel);
+      if (r) tie(d.id, r);
+    }
+    for (const lp of d.links ?? []) {
+      const t = docByPath.get(lp);
+      if (t) tie(d.id, t.id);
+    }
+    if (d.deprecatedBy) {
+      const r = resolveDoc(d.deprecatedBy);
+      if (r) tie(d.id, r);
+    }
+  }
+  const metasOf = (ids: Set<string> | undefined) =>
+    [...(ids ?? [])].map((id) => canonicalById.get(id)).filter((d): d is DocMeta => !!d);
 
   return {
     hasWireframe: (id) => wfById.has(id),
@@ -44,5 +81,7 @@ export function buildLinkGraph(ws: WorkspaceDTO): LinkGraph {
     },
     specsForWireframe: (wfId) => docs.filter((d) => d.wireframe === wfId),
     tasksForWireframe: (wfId) => tasks.filter((t) => t.wireframeId === wfId),
+    relatedForDoc: (docId) => metasOf(outgoing.get(docId)),
+    backlinksForDoc: (docId) => metasOf(incoming.get(docId)),
   };
 }

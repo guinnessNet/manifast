@@ -4,6 +4,9 @@ id: prd-main
 type: prd
 title: Manifast Demo — 제품 요구사항
 status: active
+related: [feat-auth, feat-dashboard]
+sources: []
+owner: demo
 updatedAt: 2026-06-24
 ---
 
@@ -30,6 +33,11 @@ Markdown + frontmatter 문서를 어떻게 렌더하는지 보여줍니다.
 - [x] 로그인 화면 와이어프레임
 - [x] 대시보드 와이어프레임
 - [ ] 검색 필터 구현
+
+## 상세 스펙
+
+- [사용자 인증](../specs/feat-auth.md) — 로그인 흐름과 검증 규칙
+- [대시보드](../specs/feat-dashboard.md) — 지표 카드와 테이블 구성
 
 ## 참고 코드
 

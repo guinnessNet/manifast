@@ -27,7 +27,13 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
   const [t, setT] = useState<Transform>({ x: 0, y: 0, k: 1 });
   const [spaceDown, setSpaceDown] = useState(false);
   const pan = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
+  // Left-drag starts as "pending" and becomes a pan only past a small threshold,
+  // so plain clicks still reach clickable nodes underneath.
+  const pending = useRef<{ sx: number; sy: number; ox: number; oy: number } | null>(null);
   const [grabbing, setGrabbing] = useState(false);
+  // Once the user pans/zooms manually, container resizes must not yank the
+  // viewport back to fit under them.
+  const userMoved = useRef(false);
 
   const fit = useCallback(() => {
     const el = containerRef.current;
@@ -35,13 +41,30 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
     const cw = el.clientWidth;
     const ch = el.clientHeight;
     const pad = 64;
-    const k = Math.max(MIN, Math.min(MAX, Math.min((cw - pad) / contentW, (ch - pad) / contentH, 1.5)));
+    // No MIN clamp here — a huge expanded project map must still fit-to-screen —
+    // but keep a tiny positive floor so a mid-layout zero-width container (e.g.
+    // ResizeObserver firing while a pane collapses) can't produce a mirrored
+    // negative scale.
+    const k = Math.max(0.02, Math.min(MAX, Math.min((cw - pad) / contentW, (ch - pad) / contentH, 1.5)));
     setT({ k, x: (cw - contentW * k) / 2, y: (ch - contentH * k) / 2 });
+    userMoved.current = false;
   }, [contentW, contentH]);
 
   useEffect(() => {
     fit();
   }, [fitKey, fit]);
+
+  // Refit when the container resizes (window resize, sidebar collapse) unless
+  // the user has taken over the viewport.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (!userMoved.current) fit();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fit]);
 
   // wheel: ctrl/meta -> zoom around cursor; otherwise pan
   useEffect(() => {
@@ -49,19 +72,24 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
+      // Normalize line/page delta modes (some Firefox/Linux setups) to pixels.
+      const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? el.clientHeight : 1;
+      const dx = e.deltaX * scale;
+      const dy = e.deltaY * scale;
+      userMoved.current = true;
       if (e.ctrlKey || e.metaKey) {
         const rect = el.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
         setT((prev) => {
-          const k = Math.max(MIN, Math.min(MAX, prev.k * Math.exp(-e.deltaY * 0.0015)));
+          const k = Math.max(MIN, Math.min(MAX, prev.k * Math.exp(-dy * 0.0015)));
           const ratio = k / prev.k;
           return { k, x: mx - (mx - prev.x) * ratio, y: my - (my - prev.y) * ratio };
         });
       } else if (e.shiftKey) {
-        setT((prev) => ({ ...prev, x: prev.x - e.deltaY }));
+        setT((prev) => ({ ...prev, x: prev.x - dy }));
       } else {
-        setT((prev) => ({ ...prev, x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+        setT((prev) => ({ ...prev, x: prev.x - dx, y: prev.y - dy }));
       }
     };
     el.addEventListener("wheel", onWheel, { passive: false });
@@ -87,20 +115,40 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
     };
   }, []);
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    if (!(spaceDown || e.button === 1)) return;
-    e.preventDefault();
+  const startPan = (e: React.PointerEvent, origin: { sx: number; sy: number; ox: number; oy: number }) => {
     (e.currentTarget as Element).setPointerCapture?.(e.pointerId);
-    pan.current = { sx: e.clientX, sy: e.clientY, ox: t.x, oy: t.y };
+    pan.current = origin;
+    userMoved.current = true;
     setGrabbing(true);
+  };
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (spaceDown || e.button === 1) {
+      e.preventDefault();
+      startPan(e, { sx: e.clientX, sy: e.clientY, ox: t.x, oy: t.y });
+      return;
+    }
+    // Plain left-drag pans too (the view is read-only, nothing competes for it) —
+    // but not when the press begins on a real control like the zoom pill.
+    if (e.button === 0 && !(e.target as HTMLElement).closest("button")) {
+      pending.current = { sx: e.clientX, sy: e.clientY, ox: t.x, oy: t.y };
+    }
   };
   const onPointerMove = (e: React.PointerEvent) => {
     const p = pan.current;
-    if (!p) return;
-    setT((prev) => ({ ...prev, x: p.ox + (e.clientX - p.sx), y: p.oy + (e.clientY - p.sy) }));
+    if (p) {
+      setT((prev) => ({ ...prev, x: p.ox + (e.clientX - p.sx), y: p.oy + (e.clientY - p.sy) }));
+      return;
+    }
+    const q = pending.current;
+    if (q && Math.hypot(e.clientX - q.sx, e.clientY - q.sy) > 4) {
+      pending.current = null;
+      startPan(e, q);
+    }
   };
   const endPan = () => {
     pan.current = null;
+    pending.current = null;
     setGrabbing(false);
   };
 
@@ -180,6 +228,11 @@ export function Canvas({ contentW, contentH, fitKey, children }: CanvasProps) {
           Fit
         </button>
       </div>
+
+      {/* interaction hint — pan/zoom is otherwise undiscoverable */}
+      <span className="pointer-events-none absolute bottom-[22px] left-[190px] hidden text-[10.5px] text-[var(--text-faint)] sm:block">
+        드래그 이동 · Ctrl+휠 확대/축소
+      </span>
     </div>
   );
 }

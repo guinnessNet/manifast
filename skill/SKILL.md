@@ -117,7 +117,7 @@ children. Keep sibling frames from overlapping (use the recommended sizes).
 | `Select` | — | `label` · `placeholder` · `options`: string[] |
 | `Image` | — | `ratio` (e.g. "16:9") · `label` (default "Image") |
 | `Avatar` | — | `shape`: circle\|square |
-| `Icon` | `name` (lucide icon) | `size` (default 24) |
+| `Icon` | `name` (any lucide icon name, e.g. "users", "bar-chart") | `size` (default 24) |
 | `Divider` | — | `orientation`: horizontal\|vertical |
 | `Badge` | `label` | `tone`: neutral\|info\|success\|warning\|danger |
 | `Navbar` | — | `brand` · `links`: string[] · `actions`: string[] |
@@ -129,7 +129,9 @@ Every node also needs `id`, `type`, `frame`. **Only `Box` may have `children`.**
 `Navbar`/`Table`/`List`/`Tabs` draw themselves from their props (no children).
 
 **Recommended default sizes (px):** Button 120×40 · Input/Textarea/Select 280×40
-· Navbar (screen width)×64 · Avatar 40×40 · Icon 24×24 · Divider (parent width)×1
+(**with `label`: 280×62** — the label stacks ~18px above the field box, so add
+~22px height or the field renders squished) · Navbar (screen width)×64
+· Avatar 40×40 · Icon 24×24 · Divider (parent width)×1
 · Table 44/row · List 56/item.
 
 ## 3. PRD / spec (`prd/prd.md`, `specs/<id>.md`)
@@ -254,7 +256,10 @@ Rules of thumb:
 - **Relationships → `radial`, NOT layered.** A doc/concept map forced through layered dagre
   reads as a meaningless left-right flow. Radial picks the highest-degree node as the hub;
   author so the *intended* center is the most-connected node. `groups` are not drawn in radial
-  (a mind map is hub-centric) — rely on `node.kind` tints instead.
+  (a mind map is hub-centric) — rely on `node.kind` tints instead. Use `kind: "doc"` /
+  `"wireframe"` / `"task"` on nodes so they get per-type hues + icons, and add
+  `ref: { kind: "doc", id }` so chips click through. See
+  `examples/.manifast/diagrams/doc-map.json`.
 - **Architecture/backend → `layered`** with `groups` as tiers (e.g. `ui` / `api` / `data`) and a
   consistent `direction`. This is the one case dagre is right for.
 - **Keep a hand-authored diagram focused (≤ ~25 nodes).** Big graphs are for the auto map, which

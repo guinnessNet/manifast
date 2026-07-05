@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, useReducer, type CSSProperties, type ReactNode } from "react";
 import {
   Search,
   ChevronDown,
@@ -64,7 +64,10 @@ function justify(align?: string): CSSProperties["justifyContent"] {
   return align === "center" ? "center" : align === "right" ? "flex-end" : "flex-start";
 }
 
-// --- Icon resolver (curated set; unknown names fall back to a labeled box) ---
+// --- Icon resolver ----------------------------------------------------------
+// Curated aliases render synchronously; ANY other lucide name resolves through
+// the full registry (lazy-loaded chunk, see ./allIcons.ts) so agent-authored
+// screens don't sprout dashed placeholder boxes for "users", "bar-chart", ….
 
 const ICONS: Record<string, LucideIcon> = {
   search: Search, chevrondown: ChevronDown, chevronright: ChevronRight, check: Check,
@@ -78,9 +81,41 @@ const ICONS: Record<string, LucideIcon> = {
   clock: Clock, info: Info,
 };
 
+function normIconKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+let FULL_ICONS: Record<string, LucideIcon> | null = null;
+let fullIconsPromise: Promise<Record<string, LucideIcon>> | null = null;
+/** Load the full lucide registry (idempotent). Exported so bulk export can await it. */
+export function loadFullIcons(): Promise<Record<string, LucideIcon>> {
+  if (!fullIconsPromise) {
+    fullIconsPromise = import("./allIcons").then((m) => {
+      const reg: Record<string, LucideIcon> = {};
+      for (const [k, v] of Object.entries(m.default)) reg[normIconKey(k)] = v as LucideIcon;
+      FULL_ICONS = reg;
+      return reg;
+    });
+  }
+  return fullIconsPromise;
+}
+
 function IconGlyph({ name, size, color }: { name: string; size: number; color: string }) {
-  const key = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const Cmp = ICONS[key];
+  const key = normIconKey(name);
+  const [, bump] = useReducer((x: number) => x + 1, 0);
+  const lookup = (reg: Record<string, LucideIcon> | null): LucideIcon | undefined =>
+    reg && Object.prototype.hasOwnProperty.call(reg, key) ? reg[key] : undefined;
+  const Cmp = lookup(ICONS) ?? lookup(FULL_ICONS);
+  useEffect(() => {
+    if (Cmp) return;
+    let alive = true;
+    void loadFullIcons().then(() => {
+      if (alive) bump();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [Cmp]);
   if (Cmp) return <Cmp size={size} color={color} strokeWidth={1.75} />;
   return (
     <span
@@ -193,8 +228,10 @@ function TableContent({ node }: { node: TableNode }) {
         ))}
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Rows are height-capped: a tall frame leaves whitespace below instead
+            of stretching 3 rows into airy 120px bands with lone skeleton bars. */}
         {Array.from({ length: rows }).map((_, r) => (
-          <div key={r} style={{ ...grid, flex: 1, alignItems: "center", borderTop: r === 0 ? "none" : `1px solid ${PALETTE.imageBg}`, minHeight: 28 }}>
+          <div key={r} style={{ ...grid, flex: 1, alignItems: "center", borderTop: r === 0 ? "none" : `1px solid ${PALETTE.imageBg}`, minHeight: 28, maxHeight: 48 }}>
             {cols.map((_, c) => (
               <div key={c} style={{ padding: "0 10px" }}>
                 <div style={{ height: 8, width: `${55 + ((r + c) % 3) * 12}%`, background: PALETTE.fill, borderRadius: 4 }} />
@@ -212,7 +249,7 @@ function ListContent({ node }: { node: ListNode }) {
   return (
     <div style={{ ...fill100, display: "flex", flexDirection: "column", fontFamily: FONT.family, boxSizing: "border-box", overflow: "hidden" }}>
       {Array.from({ length: items }).map((_, i) => (
-        <div key={i} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "0 8px", borderBottom: i === items - 1 ? "none" : `1px solid ${PALETTE.imageBg}`, minHeight: 36 }}>
+        <div key={i} style={{ flex: 1, display: "flex", alignItems: "center", gap: 10, padding: "0 8px", borderBottom: i === items - 1 ? "none" : `1px solid ${PALETTE.imageBg}`, minHeight: 36, maxHeight: 64 }}>
           {node.withAvatar && <div style={{ width: 32, height: 32, borderRadius: "50%", background: PALETTE.fill, flexShrink: 0 }} />}
           {node.withIcon && !node.withAvatar && (
             <div style={{ width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
@@ -328,6 +365,10 @@ function TextContent({ node }: { node: TextNode }) {
   const size = role === "h1" ? FONT.h1 : role === "h2" ? FONT.h2 : role === "h3" ? FONT.h3 : role === "caption" || role === "label" ? FONT.caption : FONT.body;
   const color = role === "h1" || role === "h2" || role === "h3" ? PALETTE.textHeading : role === "body" ? PALETTE.textBody : PALETTE.textFaint;
   const weight = role.startsWith("h") ? 700 : role === "label" ? 600 : 400;
+  // Clamp to the lines that actually fit the frame, ending in an ellipsis —
+  // otherwise long copy in a short frame gets half-sliced glyphs top AND bottom.
+  const lineH = size * 1.25;
+  const maxLines = Math.max(1, Math.floor(node.frame.h / lineH));
   return (
     <div
       style={{
@@ -335,16 +376,27 @@ function TextContent({ node }: { node: TextNode }) {
         display: "flex",
         alignItems: "center",
         justifyContent: justify(node.align),
-        textAlign: (node.align ?? "left") as CSSProperties["textAlign"],
         fontFamily: FONT.family,
         fontSize: size,
         color,
         fontWeight: weight,
-        lineHeight: 1.25,
         overflow: "hidden",
       }}
     >
-      {node.content}
+      <span
+        style={{
+          display: "-webkit-box",
+          WebkitBoxOrient: "vertical",
+          WebkitLineClamp: maxLines,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          width: "100%",
+          textAlign: (node.align ?? "left") as CSSProperties["textAlign"],
+          lineHeight: 1.25,
+        }}
+      >
+        {node.content}
+      </span>
     </div>
   );
 }
@@ -369,7 +421,9 @@ function ButtonContent({ node }: { node: ButtonNode }) {
   };
   if (variant === "primary") Object.assign(style, { background: PALETTE.primaryBg, color: PALETTE.primaryText });
   else if (variant === "secondary") Object.assign(style, { background: PALETTE.white, color: PALETTE.textHeading, border: `1px solid ${PALETTE.borderStrong}` });
-  else Object.assign(style, { background: "transparent", color: PALETTE.textBody });
+  // Ghost keeps no chrome, but an underline marks it as interactive in static
+  // renders/exports (otherwise "Forgot password?" reads as body copy).
+  else Object.assign(style, { background: "transparent", color: PALETTE.textBody, textDecoration: "underline", textUnderlineOffset: 3, textDecorationColor: PALETTE.borderStrong });
   return <div style={style}>{node.label}</div>;
 }
 
@@ -390,10 +444,17 @@ function fieldBox(extra?: CSSProperties): CSSProperties {
   };
 }
 
+// With a label, the field box gets what's left of the frame under the ~18px
+// label — clamped to a sane control height so a 280×40 frame doesn't yield a
+// squished 21px field (and a labeled/unlabeled pair renders at matching heights).
+function labeledFieldHeight(frameH: number): number {
+  return Math.max(26, Math.min(40, frameH - 18));
+}
+
 function InputContent({ node }: { node: InputNode }) {
   const placeholder = node.placeholder ?? (node.kind === "password" ? "••••••••" : "");
   const box = (
-    <div style={fieldBox({ flex: node.label ? 1 : undefined, height: node.label ? undefined : "100%" })}>
+    <div style={fieldBox({ height: node.label ? labeledFieldHeight(node.frame.h) : "100%", flexShrink: 0 })}>
       {node.kind === "search" && <Search size={14} color={PALETTE.textFaint} style={{ marginRight: 6, flexShrink: 0 }} />}
       <span style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{placeholder}</span>
     </div>
@@ -408,9 +469,20 @@ function InputContent({ node }: { node: InputNode }) {
 }
 
 function TextareaContent({ node }: { node: TextareaNode }) {
+  // `rows` (default 3) draws that many skeleton text lines when there is no
+  // placeholder, so the authored prop visibly matters.
+  const rows = Math.max(1, node.rows ?? 3);
   const box = (
-    <div style={fieldBox({ flex: 1, alignItems: "flex-start", padding: "8px 10px" })}>
-      <span style={{ overflow: "hidden" }}>{node.placeholder ?? ""}</span>
+    <div style={fieldBox({ flex: 1, minHeight: 30, alignItems: "flex-start", padding: "8px 10px" })}>
+      {node.placeholder ? (
+        <span style={{ overflow: "hidden" }}>{node.placeholder}</span>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 7, width: "100%", overflow: "hidden" }}>
+          {Array.from({ length: rows }).map((_, i) => (
+            <div key={i} style={{ height: 7, width: `${[82, 64, 74, 52][i % 4]}%`, background: PALETTE.fill, borderRadius: 4, flexShrink: 0 }} />
+          ))}
+        </div>
+      )}
     </div>
   );
   return (
@@ -456,10 +528,12 @@ function ToggleContent({ node }: { node: ToggleNode }) {
 }
 
 function SelectContent({ node }: { node: SelectNode }) {
+  // Surface the option count so authored `options` visibly matter.
   const text = node.placeholder ?? node.options?.[0] ?? "Select";
+  const extra = node.options && node.options.length > 1 ? ` (${node.options.length})` : "";
   const box = (
-    <div style={fieldBox({ justifyContent: "space-between", flex: node.label ? 1 : undefined, height: node.label ? undefined : "100%" })}>
-      <span style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{text}</span>
+    <div style={fieldBox({ justifyContent: "space-between", height: node.label ? labeledFieldHeight(node.frame.h) : "100%", flexShrink: 0 })}>
+      <span style={{ overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{`${text}${extra}`}</span>
       <ChevronDown size={16} color={PALETTE.textFaint} style={{ flexShrink: 0, marginLeft: 6 }} />
     </div>
   );
@@ -474,9 +548,12 @@ function SelectContent({ node }: { node: SelectNode }) {
 
 function AvatarContent({ node }: { node: AvatarNode }) {
   const radius = node.shape === "square" ? 8 : "50%";
+  // Scale the glyph with the frame — a 96px profile avatar shouldn't show a
+  // tiny 18px figure floating in a big empty circle.
+  const glyph = Math.max(12, Math.min(64, Math.round(Math.min(node.frame.w, node.frame.h) * 0.5)));
   return (
     <div style={{ ...fill100, borderRadius: radius, background: PALETTE.fill, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-      <User size={18} color={PALETTE.borderStrong} strokeWidth={1.75} />
+      <User size={glyph} color={PALETTE.borderStrong} strokeWidth={1.75} />
     </div>
   );
 }

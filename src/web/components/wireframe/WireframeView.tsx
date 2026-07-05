@@ -69,7 +69,7 @@ export function WireframeView({ wireframes, path, onSelect, meta, graph, tick }:
         )}
 
         <div className="ml-auto">
-          {screen && <WireframeExportMenu screen={screen} screenRef={screenRef} path={path} />}
+          {screen && <WireframeExportMenu screen={screen} screenRef={screenRef} path={path} allWireframes={wireframes} />}
         </div>
       </div>
 

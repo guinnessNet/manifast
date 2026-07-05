@@ -214,9 +214,47 @@ async function walkMd(dir: string, projectDir: string, excludes: string[], out: 
   }
 }
 
+/** Strip fenced code blocks + inline code so `# comments` / sample links don't count. */
+function stripCode(markdown: string): string {
+  return markdown.replace(/```[\s\S]*?(?:```|$)/g, "").replace(/`[^`\n]*`/g, "");
+}
+
 function firstH1(markdown: string): string | undefined {
-  const m = markdown.match(/^\s{0,3}#\s+(.+?)\s*$/m);
+  const m = stripCode(markdown).match(/^\s{0,3}#\s+(.+?)\s*$/m);
   return m ? m[1].trim() : undefined;
+}
+
+/**
+ * Markdown-body links to other local .md files, resolved to project-root-relative
+ * paths. This is how real docs/ folders actually cross-reference — without it a
+ * densely linked docs tree renders as 100% orphans on the project map. Reads the
+ * same 16KB head the rest of doc-meta uses; links past that are out of scope.
+ */
+function extractBodyLinks(body: string, rel: string): string[] | undefined {
+  const cleaned = stripCode(body);
+  const out = new Set<string>();
+  const dir = path.posix.dirname(toPosix(rel));
+  const re = /\[[^\]]*\]\(<?([^)\s>]+?)>?(?:\s+"[^"]*")?\)/g;
+  for (const m of cleaned.matchAll(re)) {
+    let target = m[1];
+    if (/^[a-z][a-z0-9+.-]*:/i.test(target)) continue; // http:, mailto:, …
+    if (target.startsWith("#")) continue; // in-page anchor
+    const hash = target.indexOf("#");
+    if (hash >= 0) target = target.slice(0, hash);
+    try {
+      target = decodeURI(target);
+    } catch {
+      /* keep raw */
+    }
+    if (!/\.(md|markdown)$/i.test(target)) continue;
+    const resolved = target.startsWith("/")
+      ? path.posix.normalize(target.slice(1))
+      : path.posix.normalize(path.posix.join(dir === "." ? "" : dir, target));
+    if (!resolved || resolved.startsWith("..")) continue; // escapes project root
+    if (resolved === toPosix(rel)) continue; // self-link
+    out.add(resolved);
+  }
+  return out.size ? [...out] : undefined;
 }
 
 const DOC_TYPES = new Set([
@@ -338,6 +376,8 @@ async function computeDocMeta(rel: string, abs: string, st: Stats | null): Promi
   const type = inferDocType(rel, fm);
   const isNative = fm.schema === "manifast.doc/1";
 
+  const bodyLinks = extractBodyLinks(body, rel);
+
   // Native, schema-valid docs use the strict contract.
   if (isNative && !yamlWarning) {
     const parsed = DocFrontmatterSchema.safeParse(fm);
@@ -354,6 +394,7 @@ async function computeDocMeta(rel: string, abs: string, st: Stats | null): Promi
         wireframe: d.wireframe,
         tasks: d.tasks,
         related: d.related,
+        links: bodyLinks,
         owner: d.owner,
         lastReviewed: d.lastReviewed,
         reviewBy: d.reviewBy,
@@ -368,11 +409,11 @@ async function computeDocMeta(rel: string, abs: string, st: Stats | null): Promi
       };
     }
     // Native but invalid → render with a warning, best-effort fields.
-    return { ...bestEffort(fm, rel, source, body, fsCreated, fsUpdated, type), ok: true, warning: formatZodError(parsed.error) };
+    return { ...bestEffort(fm, rel, source, body, fsCreated, fsUpdated, type, bodyLinks), ok: true, warning: formatZodError(parsed.error) };
   }
 
   // External / found docs (no manifast schema) → lenient, no schema warning.
-  return { ...bestEffort(fm, rel, source, body, fsCreated, fsUpdated, type), ok: true, warning: yamlWarning };
+  return { ...bestEffort(fm, rel, source, body, fsCreated, fsUpdated, type, bodyLinks), ok: true, warning: yamlWarning };
 }
 
 function bestEffort(
@@ -383,6 +424,7 @@ function bestEffort(
   fsCreated: string | undefined,
   fsUpdated: string | undefined,
   type: DocMeta["type"],
+  links: string[] | undefined,
 ): DocMeta {
   const fmStatus = typeof fm.status === "string" && STATUS_SET.has(fm.status) ? fm.status : undefined;
   const status = fmStatus ?? (pathArchived(rel) ? "archived" : source === "manifast" ? "draft" : "none");
@@ -397,6 +439,7 @@ function bestEffort(
     wireframe: typeof fm.wireframe === "string" ? fm.wireframe : undefined,
     tasks: Array.isArray(fm.tasks) ? fm.tasks.filter((x): x is string => typeof x === "string") : undefined,
     related: Array.isArray(fm.related) ? fm.related.filter((x): x is string => typeof x === "string") : undefined,
+    links,
     owner: typeof fm.owner === "string" ? fm.owner : undefined,
     lastReviewed: typeof fm.lastReviewed === "string" ? fm.lastReviewed : undefined,
     reviewBy: typeof fm.reviewBy === "number" ? fm.reviewBy : undefined,

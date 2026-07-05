@@ -30,9 +30,40 @@ import { LinkChip } from "../LinkChip";
 import { DocExportMenu } from "../ExportMenu";
 import { useNavigate } from "../../lib/nav";
 import { WireframeThumb } from "../wireframe/WireframeThumb";
-import { adoptDoc, setDocStatus, setDocReview } from "../../lib/api";
+import { adoptDoc, setDocStatus, setDocReview, rawUrl } from "../../lib/api";
 import { buildDocTree, allFolderPaths, folderLabel, type DocTreeFolder } from "../../lib/docTree";
 import { cn } from "../../lib/cn";
+
+/** Browser-side posix normalize ("docs/a/../b.md" → "docs/b.md"); "" if it escapes root. */
+function normalizePath(p: string): string {
+  const parts: string[] = [];
+  for (const seg of p.split("/")) {
+    if (!seg || seg === ".") continue;
+    if (seg === "..") {
+      if (parts.length === 0) return "";
+      parts.pop();
+    } else parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+const SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
+
+/** Resolve a markdown-relative href/src against the current doc's folder. */
+function resolveRelative(target: string, docPath?: string): string | undefined {
+  if (!docPath || !target || SCHEME_RE.test(target) || target.startsWith("#")) return undefined;
+  let clean = target.split("#")[0];
+  if (!clean) return undefined;
+  // Match the server's extractBodyLinks: percent-encoded local paths
+  // ("./%ED%95%9C%EA%B8%80.md") must resolve to the same doc path.
+  try {
+    clean = decodeURI(clean);
+  } catch {
+    /* keep raw */
+  }
+  const dir = docPath.includes("/") ? docPath.slice(0, docPath.lastIndexOf("/")) : "";
+  return normalizePath(clean.startsWith("/") ? clean.slice(1) : dir ? `${dir}/${clean}` : clean) || undefined;
+}
 
 const STATUSES = ["draft", "active", "done", "deprecated", "archived"];
 const STATUS_TONE: Record<string, "neutral" | "info" | "success" | "warning"> = {
@@ -93,6 +124,49 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
   const linkedTasks = meta ? graph.tasksForSpec(meta.id) : [];
   const brokenTaskIds = (meta?.tasks ?? []).filter((id) => !graph.hasTask(id));
   const successor = meta?.deprecatedBy;
+  const relatedDocs = meta ? graph.relatedForDoc(meta.id).filter((d) => d.path !== meta.path) : [];
+  const backlinks = meta
+    ? graph.backlinksForDoc(meta.id).filter((d) => d.path !== meta.path && !relatedDocs.some((r) => r.path === d.path))
+    : [];
+
+  // Relative links navigate inside the SPA (no full reload) and relative images
+  // load through /api/raw; everything else keeps default anchor behavior.
+  const docPath = meta?.path;
+  const mdComponents = useMemo(
+    () => ({
+      // `node` is react-markdown's hast node — strip it so it doesn't land in
+      // the DOM (and exported HTML) as node="[object Object]".
+      a: ({ node: _node, href, children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { node?: unknown }) => {
+        const resolved = resolveRelative(href ?? "", docPath);
+        const targetDoc = resolved && /\.(md|markdown)$/i.test(resolved) ? docs.find((d) => d.path === resolved) : undefined;
+        if (targetDoc) {
+          return (
+            <a
+              {...props}
+              href={href}
+              onClick={(e) => {
+                e.preventDefault();
+                navigate({ kind: "doc", id: targetDoc.id });
+              }}
+            >
+              {children}
+            </a>
+          );
+        }
+        const external = !!href && SCHEME_RE.test(href);
+        return (
+          <a {...props} href={href} {...(external ? { target: "_blank", rel: "noreferrer" } : {})}>
+            {children}
+          </a>
+        );
+      },
+      img: ({ node: _node, src, alt, ...props }: React.ImgHTMLAttributes<HTMLImageElement> & { node?: unknown }) => {
+        const resolved = typeof src === "string" ? resolveRelative(src, docPath) : undefined;
+        return <img {...props} alt={alt} src={resolved ? rawUrl(resolved) : src} />;
+      },
+    }),
+    [docPath, docs, navigate],
+  );
 
   return (
     <div className="flex h-full min-h-0">
@@ -163,6 +237,24 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                   </div>
                 )}
 
+                {/* doc↔doc ties: what the agent wired (related/body links) + who points here */}
+                {(relatedDocs.length > 0 || backlinks.length > 0) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    {relatedDocs.length > 0 && (
+                      <span className="text-[11px] font-medium text-[var(--text-faint)]">관련</span>
+                    )}
+                    {relatedDocs.map((d) => (
+                      <LinkChip key={d.path} target={{ kind: "doc", id: d.id }} exists label={d.title} icon={<FileText size={11} />} />
+                    ))}
+                    {backlinks.length > 0 && (
+                      <span className="text-[11px] font-medium text-[var(--text-faint)]">← 참조됨</span>
+                    )}
+                    {backlinks.map((d) => (
+                      <LinkChip key={d.path} target={{ kind: "doc", id: d.id }} exists label={d.title} icon={<FileText size={11} />} />
+                    ))}
+                  </div>
+                )}
+
                 {(meta?.owner || meta?.lastReviewed || (meta?.sources && meta.sources.length > 0)) && (
                   <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--border-soft)] pt-3 font-mono text-[11px] text-[var(--text-faint)]">
                     {(meta?.owner || meta?.lastReviewed) && (
@@ -204,7 +296,7 @@ export function DocView({ docs, path, onSelect, meta, graph, tick }: DocViewProp
                     </div>
                   )}
                   <div ref={docRef} className="mf-prose">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={mdComponents}>
                       {doc.markdown}
                     </ReactMarkdown>
                   </div>

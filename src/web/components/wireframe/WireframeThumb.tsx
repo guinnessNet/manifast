@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import { useFile } from "../../hooks/useFile";
 import { ScreenRenderer } from "./Renderer";
 
@@ -11,9 +12,29 @@ export interface WireframeThumbProps {
 }
 
 export function WireframeThumb({ path, tick, maxW = 240, maxH = 200, active, onClick }: WireframeThumbProps) {
-  const { file } = useFile(path, tick);
+  const { file, loading } = useFile(path, tick);
   const screen = file && file.kind === "wireframe" ? file.data : null;
-  if (!screen) return null;
+  // Keep the strip layout stable: skeleton while loading, a flagged placeholder
+  // for invalid files — never a label floating with no box.
+  if (!screen) {
+    return (
+      <button
+        onClick={onClick}
+        title={loading ? "Loading…" : `열 수 없음: ${path}`}
+        className={
+          "relative block overflow-hidden rounded-md border bg-[var(--bg-elevated)] " +
+          (loading ? "animate-pulse border-[var(--border)]" : "border-[var(--err-border)] bg-[var(--err-bg)]")
+        }
+        style={{ width: maxW * 0.92, height: maxH }}
+      >
+        {!loading && (
+          <span className="absolute inset-0 grid place-items-center">
+            <AlertTriangle size={16} className="text-[var(--err-text)]" />
+          </span>
+        )}
+      </button>
+    );
+  }
 
   const scale = Math.min(maxW / screen.size.w, maxH / screen.size.h, 1);
   return (

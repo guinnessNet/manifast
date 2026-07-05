@@ -4,6 +4,72 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
+## 1.3.0 — 관계도/다이어그램 렌더링 정밀화 + export 신뢰성 (2026-07-05)
+
+실사용 피드백("문서 관계·구조도가 제대로/예쁘게 안 그려진다, export 품질 불확실")을
+정조준한 릴리스.
+
+### Map / 다이어그램 (관계도·구조도)
+- **한글 라벨 잘림 해결.** 노드 크기를 canvas `measureText`로 실측(CJK 폭 반영,
+  SSR은 CJK 가중 추정으로 폴백)하고, 긴 제목은 말줄임 대신 **2줄 줄바꿈**.
+- **관계 종류가 눈에 보인다.** 간선을 kind별 색+점선으로 구분(links/related/
+  references/spec/screen/dep/task/deprecatedBy…), 화살촉도 같은 색, 툴바의
+  kind 필터 칩이 색상 범례를 겸함. 노드는 doc/wireframe/task/phase/folder별
+  고유 색+아이콘, 캔버스 우하단에 노드 종류 범례.
+- **radial 레이아웃 재설계.** 간선을 노드 경계에서 절단해 화살촉·라벨이 노드에
+  묻히지 않음, 간선 라벨은 진짜 중점에 배경 halo와 함께 표시, 링 반지름이 노드
+  수에 맞춰 자동 확장(칩 겹침 불가), 서브트리별 부채꼴 배치로 관련 노드가 부모
+  근처에 모임, **연결 컴포넌트마다 독립 radial 클라우드**(뭉개진 두 번째
+  클러스터 없음), 고립 노드는 하단 그리드 밴드.
+- **dagre 멀티그래프 + 간선 라벨 공간 예약** — 같은 노드쌍의 복수 간선이 더는
+  겹쳐 사라지지 않고, 라벨 위치를 dagre가 배정. flow의 `decision`은 **다이아몬드**로.
+- 자동 프로젝트 맵: task `specId`가 uid여도 간선 생성, spec↔task 상호 선언
+  중복 간선 병합, 암호 같던 간선 라벨("→", "~", "src") 제거.
+
+### 문서 관계
+- **markdown 본문 링크를 관계로 인식.** `[스펙](./feat-auth.md)` 같은 상대 링크를
+  서버가 추출(코드 펜스 제외)해 맵의 `references` 간선 + 고아 판정에 반영 —
+  frontmatter 없이도 실제 docs/ 폴더의 관계가 그려진다.
+- **문서 화면에 관계가 보인다.** `related`/본문 링크(관련)와 역링크(← 참조됨)
+  칩을 문서 헤더에 표시.
+- 문서 본문의 **상대 .md 링크는 SPA 내 이동**(전체 리로드 없음), 상대 이미지 경로는
+  `/api/raw`로 로드. `related`가 경로("docs/x.md")나 파일명("x")이어도 해석.
+- 루트 파일(README/CLAUDE/AGENTS)은 고아 경고에서 제외.
+
+### Export
+- **맵/다이어그램 PNG·SVG에서 간선이 사라지던 버그 수정** — export 시 CSS 변수를
+  대상 요소에 인라인해 `var(--edge)` 참조가 복제본에서도 해석되게 함.
+- **한글 파일명 보존**("로그인 유저플로우.png" — 이전엔 "manifast.png").
+- 맵 export가 현재 테마 배경색 사용(다크에서 반쪽 다크/흰 배경 뒤섞임 제거).
+- **`.zip`의 `.manifast/.manifast/` 이중 중첩 수정** — 압축 해제하면 바로 복원 가능.
+- **와이어프레임 "PNG 전체 (N장 ZIP)"** — 화면 전부를 한 번에 PNG로.
+- Doc "Print / PDF"가 독립 창에서 인쇄(앱 크롬/1페이지 잘림/다크 잉크 문제 해결),
+  거대 맵은 픽셀 예산 내로 자동 축소(빈 PNG 방지), export 실패가 조용히
+  삼켜지지 않고 알림 표시.
+
+### 와이어프레임 렌더러
+- **모든 lucide 아이콘 지원**(~1,500개, 지연 로드 청크) — 커스텀 33종 외 이름이
+  점선 placeholder로 깨지던 문제 해결.
+- `label` 있는 Input/Select 필드 박스 높이 안정화(찌그러진 21px 필드 제거),
+  SKILL 가이드에 "label 사용 시 280×62" 명시.
+- Text 노드가 프레임에 맞는 줄 수로 **line-clamp + 말줄임**(위아래 반 잘린 글자
+  제거), card/section Box가 자식을 클리핑(둥근 모서리 침범·카드 밖 유출 방지),
+  Table/List 행 높이 상한(거대 스켈레톤 행 제거), Avatar 글리프가 프레임에 비례,
+  ghost 버튼에 밑줄(정적 export에서도 인터랙티브로 읽힘), Textarea `rows`·Select
+  `options` 실반영, 썸네일 로딩 스켈레톤/오류 placeholder.
+
+### 캔버스 UX
+- **왼쪽 드래그로 팬**(클릭과 4px 임계값으로 구분), 화면에 조작 힌트 표시,
+  창 크기 변경 시 자동 refit(사용자가 조작한 뒤엔 유지), 휠 deltaMode 정규화,
+  초대형 맵도 Fit 가능(축소 하한 제거).
+
+### 예제 워크스페이스
+- PRD에 `related`/본문 링크 추가(첫 실행부터 관계도가 이어짐 + 고아 경고 감소),
+  radial `doc-map.json` 예제 추가(SKILL에서 참조), 스펙에 `sources`/`owner`/
+  `reviewBy` 시연, 로그인/대시보드 필드 높이 수정, 대시보드 하단 빈 공간을
+  Recent activity(withAvatar List)·Team 카드로 채움, 단독 Radio를 Light/Dark
+  그룹으로 교체.
+
 ## 1.2.3 — README troubleshooting + CI auto-publish (2026-06-30)
 
 - **README troubleshooting section** for the three most common newcomer snags:

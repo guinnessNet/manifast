@@ -1,0 +1,22 @@
+{
+  "schema": "manifast.diagram/1",
+  "id": "doc-map",
+  "title": "문서 관계도",
+  "kind": "docmap",
+  "generatedBy": "claude-code",
+  "generatedAt": "2026-07-05",
+  "nodes": [
+    { "id": "prd", "label": "제품 요구사항 (PRD)", "kind": "doc", "description": "제품의 목표와 범위", "ref": { "kind": "doc", "id": "prd-main" } },
+    { "id": "auth", "label": "사용자 인증 스펙", "kind": "doc", "ref": { "kind": "doc", "id": "feat-auth" } },
+    { "id": "dash", "label": "대시보드 스펙", "kind": "doc", "ref": { "kind": "doc", "id": "feat-dashboard" } },
+    { "id": "wf-login", "label": "로그인 화면", "kind": "wireframe", "ref": { "kind": "wireframe", "id": "screen-login" } },
+    { "id": "wf-dash", "label": "대시보드 화면", "kind": "wireframe", "ref": { "kind": "wireframe", "id": "screen-dashboard" } }
+  ],
+  "edges": [
+    { "from": "prd", "to": "auth", "kind": "related", "label": "상세화" },
+    { "from": "prd", "to": "dash", "kind": "related", "label": "상세화" },
+    { "from": "auth", "to": "wf-login", "kind": "links" },
+    { "from": "dash", "to": "wf-dash", "kind": "links" },
+    { "from": "auth", "to": "dash", "kind": "references", "label": "세션 공유" }
+  ]
+}

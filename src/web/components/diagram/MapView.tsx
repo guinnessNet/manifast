@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { WorkspaceDTO } from "@shared/types";
 import type { DiagramRef } from "@shared/schema/diagram";
+import { FileText, LayoutGrid, SquareCheckBig, Folder, Milestone, type LucideIcon } from "lucide-react";
 import { useFile } from "../../hooks/useFile";
 import { Canvas } from "../wireframe/Canvas";
 import { ErrorBanner } from "../ErrorBanner";
@@ -11,11 +12,16 @@ import { smoothPath } from "../../lib/smoothPath";
 import { useNavigate, type NavTarget } from "../../lib/nav";
 import { cn } from "../../lib/cn";
 
-// "manifast item" nodes read as accent-tinted clickable chips; structural nodes
-// stay neutral with a per-kind left-border hue. external = dashed. Flow / tree
-// kinds get a full "typed" treatment (filled tint + colored border, see below).
+// "manifast item" nodes (doc/wireframe/task) get a distinct per-kind hue + icon
+// so a user can tell documents from screens from tasks at a glance; structural
+// nodes stay neutral with a per-kind left-border hue. external = dashed. Flow /
+// tree kinds get a full "typed" treatment (filled tint + colored border).
 const MANIFAST_KINDS = new Set(["doc", "wireframe", "task"]);
 const KIND_HUE: Record<string, string> = {
+  // manifast items — the auto project map's primary node kinds
+  doc: "#0ea5e9",
+  wireframe: "#8b5cf6",
+  task: "#f97316",
   // architecture maps — subtle per-kind left-border hue
   module: "#3b82f6",
   service: "#8b5cf6",
@@ -48,6 +54,38 @@ const TYPED_KINDS = new Set([
 ]);
 // Terminators render as stadium/pills; everything else stays a rounded rect.
 const PILL_KINDS = new Set(["start", "end", "terminator"]);
+
+// Tiny inline icon per manifast kind — the icon (not just hue) is what makes
+// two same-named chips ("대시보드" the doc vs "대시보드" the screen) tellable apart.
+const KIND_ICON: Record<string, LucideIcon> = {
+  doc: FileText,
+  wireframe: LayoutGrid,
+  task: SquareCheckBig,
+  folder: Folder,
+  phase: Milestone,
+};
+
+// Per-relation edge styling. Weak/derived relations are dashed; strong authored
+// relations are solid and hued. Anything unknown falls back to the theme token.
+const EDGE_STYLE: Record<string, { color: string; dash?: string }> = {
+  links: { color: "#64748b" },
+  related: { color: "#94a3b8", dash: "5 4" },
+  references: { color: "#94a3b8", dash: "5 4" },
+  source: { color: "#a1a1aa", dash: "2 4" },
+  dep: { color: "#f97316" },
+  spec: { color: "#0ea5e9" },
+  screen: { color: "#8b5cf6" },
+  task: { color: "#f59e0b" },
+  deprecatedBy: { color: "#ef4444", dash: "3 3" },
+};
+const DEFAULT_EDGE_COLOR = "var(--edge)";
+function edgeStyleOf(kind?: string): { color: string; dash?: string } {
+  return EDGE_STYLE[kind ?? ""] ?? { color: DEFAULT_EDGE_COLOR };
+}
+/** Stable DOM id for a marker of a given color ("#0ea5e9" → "mf-arrow-0ea5e9"). */
+function markerId(color: string): string {
+  return `mf-arrow-${color.replace(/[^a-zA-Z0-9]+/g, "")}`;
+}
 
 function refToTarget(ref: DiagramRef): NavTarget | null {
   if (ref.kind === "wireframe") return { kind: "wireframe", id: ref.id };
@@ -261,7 +299,7 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
         )}
         {focusMode && !focusId && <span className="text-xs text-[var(--text-faint)]">노드를 클릭해 이웃만 보기</span>}
 
-        {/* Edge-kind filters */}
+        {/* Edge-kind filters (double as the edge-color legend) */}
         {edgeKinds.length > 1 &&
           edgeKinds.map((k) => (
             <button
@@ -269,12 +307,19 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
               onClick={() => toggleKind(k)}
               title={`관계 '${k}' 토글`}
               className={cn(
-                "rounded-md border px-2 py-0.5 text-[11px]",
+                "inline-flex items-center gap-1.5 rounded-md border px-2 py-0.5 text-[11px]",
                 hiddenKinds.has(k)
                   ? "border-[var(--border)] bg-[var(--bg)] text-[var(--text-faint)] line-through"
                   : "border-[var(--border)] bg-[var(--bg)] text-[var(--text-muted)]",
               )}
             >
+              <span
+                className="inline-block h-[3px] w-3.5 rounded-full"
+                style={{
+                  background: hiddenKinds.has(k) ? "var(--border)" : edgeStyleOf(k).color,
+                  opacity: edgeStyleOf(k).dash ? 0.75 : 1,
+                }}
+              />
               {k}
             </button>
           ))}
@@ -343,17 +388,53 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
               {/* edges */}
               <svg width={layout.width} height={layout.height} style={{ position: "absolute", inset: 0, overflow: "visible", pointerEvents: "none" }}>
                 <defs>
-                  <marker id="mf-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                    <path d="M0,0 L8,4 L0,8 z" fill="var(--wire-strong)" />
-                  </marker>
+                  {[...new Set(layout.edges.map((e) => edgeStyleOf(e.edge.kind).color))].map((color) => (
+                    <marker
+                      key={color}
+                      id={markerId(color)}
+                      viewBox="0 0 10 10"
+                      refX="8.5"
+                      refY="5"
+                      markerWidth="8.5"
+                      markerHeight="8.5"
+                      orient="auto-start-reverse"
+                    >
+                      <path d="M0,0.8 L9.2,5 L0,9.2 z" fill={color} />
+                    </marker>
+                  ))}
                 </defs>
                 {layout.edges.map((e, i) => {
-                  const mid = e.points[Math.floor(e.points.length / 2)];
+                  const style = edgeStyleOf(e.edge.kind);
+                  const mid = e.labelPos ?? e.points[Math.floor(e.points.length / 2)];
+                  const d = smoothPath(e.points);
                   return (
                     <g key={i}>
-                      <path d={smoothPath(e.points)} fill="none" stroke="var(--wire-strong)" strokeWidth={1.5} strokeLinecap="round" markerEnd="url(#mf-arrow)" />
+                      {/* invisible fat stroke = hover target for the relation tooltip */}
+                      <path d={d} fill="none" stroke="transparent" strokeWidth={11} style={{ pointerEvents: "stroke" }}>
+                        <title>{`${e.from.replace(/^\w+:/, "")} → ${e.to.replace(/^\w+:/, "")}${e.edge.kind ? ` · ${e.edge.kind}` : ""}`}</title>
+                      </path>
+                      <path
+                        d={d}
+                        fill="none"
+                        stroke={style.color}
+                        strokeWidth={1.75}
+                        strokeDasharray={style.dash}
+                        strokeLinecap="round"
+                        markerEnd={`url(#${markerId(style.color)})`}
+                      />
                       {e.edge.label && mid && (
-                        <text x={mid.x} y={mid.y - 4} fontSize={10} textAnchor="middle" fill="var(--text-faint)">
+                        <text
+                          x={mid.x}
+                          y={mid.y + 3.5}
+                          fontSize={10.5}
+                          fontWeight={500}
+                          textAnchor="middle"
+                          fill="var(--edge-label)"
+                          stroke="var(--bg)"
+                          strokeWidth={3.5}
+                          strokeLinejoin="round"
+                          paintOrder="stroke"
+                        >
                           {e.edge.label}
                         </text>
                       )}
@@ -370,18 +451,79 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
                 const hue = KIND_HUE[kind];
                 const typed = !!hue && TYPED_KINDS.has(kind);
                 const pill = PILL_KINDS.has(kind);
+                const Icon = KIND_ICON[kind];
                 const target = n.node.ref ? resolveRef(n.node.ref) : null;
                 const did = refDocId(n.node.ref);
                 const stale = !!did && staleDocIds.has(did);
                 const clickable = focusMode || !!target;
+                const onClick = () => {
+                  if (focusMode) setFocusId(n.id);
+                  else if (target) navigate(target);
+                };
+                const title = stale ? `${n.node.label} — 검토 필요(stale)` : n.node.description ?? n.node.label;
+                // Multi-line labels wrap to 2 lines before ellipsizing (layout.ts
+                // sizes the chip accordingly) — Korean titles stay readable.
+                const labelStyle: React.CSSProperties = {
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  wordBreak: "break-word",
+                  lineHeight: 1.3,
+                };
+
+                if (kind === "decision") {
+                  // Flowchart decision = diamond (rotated square under a level label).
+                  const inset = (n.w * (1 - 1 / Math.SQRT2)) / 2;
+                  return (
+                    <div
+                      key={n.id}
+                      onClick={onClick}
+                      title={title}
+                      style={{
+                        position: "absolute",
+                        left: n.x,
+                        top: n.y,
+                        width: n.w,
+                        height: n.h,
+                        cursor: clickable ? "pointer" : "default",
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset,
+                          transform: "rotate(45deg)",
+                          background: `${hue}1f`,
+                          border: stale ? "1.5px solid var(--warn)" : `1.5px solid ${hue}`,
+                          borderRadius: 12,
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0 16%",
+                        }}
+                      >
+                        <span style={{ ...labelStyle, fontSize: 12.5, fontWeight: 600, textAlign: "center", color: "var(--text)" }}>
+                          {n.node.label}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <div
                     key={n.id}
-                    onClick={() => {
-                      if (focusMode) setFocusId(n.id);
-                      else if (target) navigate(target);
-                    }}
-                    title={stale ? `${n.node.label} — 검토 필요(stale)` : n.node.description ?? n.node.label}
+                    onClick={onClick}
+                    title={title}
                     style={{
                       position: "absolute",
                       left: n.x,
@@ -389,14 +531,14 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
                       width: n.w,
                       height: n.h,
                       background: isManifast
-                        ? "var(--accent-subtle)"
+                        ? `${hue}14`
                         : typed
                           ? `${hue}${pill ? "30" : "1f"}`
                           : "var(--bg-elevated)",
                       border: stale
                         ? "1px solid var(--warn)"
                         : isManifast
-                          ? "1px solid var(--accent-border)"
+                          ? `1.5px solid ${hue}55`
                           : isExternal
                             ? `1.5px dashed ${hue ?? "var(--border)"}`
                             : typed
@@ -404,11 +546,12 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
                               : "1px solid var(--border)",
                       borderLeft:
                         !stale && !isManifast && !isExternal && !typed && hue ? `3px solid ${hue}` : undefined,
-                      color: isManifast ? "var(--accent)" : "var(--text)",
+                      color: "var(--text)",
                       borderRadius: pill ? 999 : 11,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
+                      gap: 7,
                       padding: "0 12px",
                       fontSize: 13,
                       fontWeight: 500,
@@ -418,13 +561,39 @@ export function MapView({ data, tick, mode = "map" }: MapViewProps) {
                       overflow: "hidden",
                     }}
                   >
-                    <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.node.label}</span>
+                    {Icon && <Icon size={13} style={{ flexShrink: 0, color: hue ?? "var(--text-faint)" }} />}
+                    <span style={labelStyle}>{n.node.label}</span>
                   </div>
                 );
               })}
             </div>
           </Canvas>
         )}
+
+        {/* Node-kind legend (bottom-right, clear of the zoom pill) */}
+        {layout && layout.nodes.length > 0 && (() => {
+          const kinds = [...new Set(layout.nodes.map((n) => (n.node.kind ?? "").toLowerCase()))].filter(
+            (k) => KIND_HUE[k],
+          );
+          if (kinds.length < 2) return null;
+          return (
+            <div className="pointer-events-none absolute bottom-4 right-3 z-10 flex flex-col gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-elevated)]/95 px-2.5 py-2 shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
+              {kinds.map((k) => {
+                const Icon = KIND_ICON[k];
+                return (
+                  <span key={k} className="inline-flex items-center gap-1.5 text-[10.5px] font-medium text-[var(--text-muted)]">
+                    {Icon ? (
+                      <Icon size={11} style={{ color: KIND_HUE[k] }} />
+                    ) : (
+                      <span className="inline-block h-2 w-2 rounded-[3px]" style={{ background: KIND_HUE[k] }} />
+                    )}
+                    {k}
+                  </span>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Orphans panel */}
         {showOrphans && orphans.length > 0 && (

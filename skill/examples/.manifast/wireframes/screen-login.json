@@ -24,7 +24,7 @@
     {
       "id": "n3",
       "type": "Input",
-      "frame": { "x": 24, "y": 176, "w": 342, "h": 44 },
+      "frame": { "x": 24, "y": 176, "w": 342, "h": 62 },
       "label": "이메일",
       "placeholder": "you@example.com",
       "kind": "email"
@@ -32,21 +32,21 @@
     {
       "id": "n4",
       "type": "Input",
-      "frame": { "x": 24, "y": 240, "w": 342, "h": 44 },
+      "frame": { "x": 24, "y": 250, "w": 342, "h": 62 },
       "label": "비밀번호",
       "kind": "password"
     },
     {
       "id": "n5",
       "type": "Checkbox",
-      "frame": { "x": 24, "y": 300, "w": 200, "h": 20 },
+      "frame": { "x": 24, "y": 328, "w": 200, "h": 20 },
       "label": "로그인 상태 유지",
       "checked": true
     },
     {
       "id": "n6",
       "type": "Button",
-      "frame": { "x": 24, "y": 340, "w": 342, "h": 48 },
+      "frame": { "x": 24, "y": 372, "w": 342, "h": 48 },
       "label": "로그인",
       "variant": "primary",
       "size": "lg"
@@ -54,19 +54,19 @@
     {
       "id": "n7",
       "type": "Button",
-      "frame": { "x": 24, "y": 400, "w": 342, "h": 44 },
+      "frame": { "x": 24, "y": 432, "w": 342, "h": 44 },
       "label": "회원가입",
       "variant": "secondary"
     },
     {
       "id": "n8",
       "type": "Divider",
-      "frame": { "x": 24, "y": 468, "w": 342, "h": 1 }
+      "frame": { "x": 24, "y": 500, "w": 342, "h": 1 }
     },
     {
       "id": "n9",
       "type": "Button",
-      "frame": { "x": 24, "y": 484, "w": 342, "h": 44 },
+      "frame": { "x": 24, "y": 516, "w": 342, "h": 44 },
       "label": "비밀번호를 잊으셨나요?",
       "variant": "ghost"
     }

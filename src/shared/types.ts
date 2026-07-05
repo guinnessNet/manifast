@@ -39,6 +39,9 @@ export interface DocMeta extends Validity {
   wireframe?: string;
   tasks?: string[];
   related?: string[]; // ids/uids of related docs (doc↔doc links)
+  /** Markdown-body links to other local .md files (project-root-relative paths,
+      extracted server-side) — how real docs actually cross-reference. */
+  links?: string[];
   // governance (v4)
   owner?: string;
   lastReviewed?: string;

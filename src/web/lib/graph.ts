@@ -34,17 +34,26 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false, a
   };
 
   const docIdByKey = docKeyResolver(ws);
+  const docIdByPath = new Map(ws.items.docs.map((d) => [d.path, d.id]));
   for (const d of ws.items.docs) {
     if (d.wireframe) add(`doc:${d.id}`, `wf:${d.wireframe}`, "links");
     for (const tid of d.tasks ?? []) add(`doc:${d.id}`, `task:${tid}`, "links");
-    if (d.deprecatedBy) add(`doc:${d.id}`, `doc:${docIdByKey(d.deprecatedBy) ?? d.deprecatedBy}`, "deprecatedBy", "→");
+    if (d.deprecatedBy) add(`doc:${d.id}`, `doc:${docIdByKey(d.deprecatedBy) ?? d.deprecatedBy}`, "deprecatedBy");
     for (const rel of d.related ?? []) {
       const r = docIdByKey(rel);
-      if (r && r !== d.id) add(`doc:${d.id}`, `doc:${r}`, "related", "~");
+      if (r && r !== d.id) add(`doc:${d.id}`, `doc:${r}`, "related");
+    }
+    // Markdown-body links (server-extracted) — the relations real docs already
+    // have without any frontmatter wiring.
+    for (const lp of d.links ?? []) {
+      const r = docIdByPath.get(lp);
+      if (r && r !== d.id) add(`doc:${d.id}`, `doc:${r}`, "references");
     }
   }
   for (const t of ws.items.tasks?.tasks ?? []) {
-    if (t.specId) add(`task:${t.id}`, `doc:${t.specId}`, "spec");
+    // Resolve specId through the same id/uid resolver as `related` — a task
+    // referencing a spec by uid must still produce a visible edge.
+    if (t.specId) add(`task:${t.id}`, `doc:${docIdByKey(t.specId) ?? t.specId}`, "spec");
     if (t.wireframeId) add(`task:${t.id}`, `wf:${t.wireframeId}`, "screen");
     for (const dep of t.deps ?? []) add(`task:${t.id}`, `task:${dep}`, "dep");
   }
@@ -54,6 +63,7 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false, a
 
   // `sources` overlap → chain shown docs that share a code path (avoids an n²
   // hairball while still giving source-linked docs a visible connection).
+  // Added BEFORE the dedupe pass so "references" edges can yield to them.
   const shownDocBySource = new Map<string, string[]>();
   for (const d of ws.items.docs) {
     if (!has.has(`doc:${d.id}`)) continue;
@@ -69,9 +79,39 @@ export function buildProjectMap(ws: WorkspaceDTO, includeUnlinkedDocs = false, a
       const key = `${ids[i - 1]}|${ids[i]}`;
       if (sourceEdgeSeen.has(key)) continue;
       sourceEdgeSeen.add(key);
-      add(`doc:${ids[i - 1]}`, `doc:${ids[i]}`, "source", "src");
+      add(`doc:${ids[i - 1]}`, `doc:${ids[i]}`, "source");
     }
   }
+
+  // Reciprocal doc↔task declarations (spec `tasks:[…]` + task `specId`) would
+  // otherwise draw two overlapping edges per pair — keep the task→doc "spec"
+  // edge and drop the mirror. A body-link "references" edge likewise yields to
+  // any stronger authored relation between the same docs. Then drop exact dupes.
+  const specPairs = new Set(
+    edges.filter((e) => e.kind === "spec").map((e) => `${e.to}|${e.from}`),
+  );
+  const strongDocPairs = new Set(
+    edges
+      .filter((e) => e.kind === "related" || e.kind === "deprecatedBy" || e.kind === "source")
+      .flatMap((e) => [`${e.from}|${e.to}`, `${e.to}|${e.from}`]),
+  );
+  const seenEdge = new Set<string>();
+  const seenRefPair = new Set<string>();
+  const deduped = edges.filter((e) => {
+    if (e.kind === "links" && specPairs.has(`${e.from}|${e.to}`)) return false;
+    if (e.kind === "references") {
+      if (strongDocPairs.has(`${e.from}|${e.to}`)) return false;
+      // A→B and B→A body references collapse into one line.
+      if (seenRefPair.has(`${e.to}|${e.from}`)) return false;
+      seenRefPair.add(`${e.from}|${e.to}`);
+    }
+    const key = `${e.from}|${e.to}|${e.kind}`;
+    if (seenEdge.has(key)) return false;
+    seenEdge.add(key);
+    return true;
+  });
+  edges.length = 0;
+  edges.push(...deduped);
 
   const map: DiagramFile = {
     schema: "manifast.diagram/1",
@@ -168,9 +208,19 @@ function aggregateOverview(map: DiagramFile, ws: WorkspaceDTO): DiagramFile {
   return { ...map, nodes, edges };
 }
 
-/** Resolve a doc reference (by id OR uid) to its canonical doc id. */
-function docKeyResolver(ws: WorkspaceDTO): (key: string) => string | undefined {
+/**
+ * Resolve a doc reference to its canonical doc id. Accepts id, uid, project-root
+ * path ("docs/setup.md") and filename stem ("setup") — agents naturally author
+ * any of these in `related`, and a silently dropped edge is exactly the
+ * "relations not drawn" complaint. id/uid take precedence over path/stem.
+ */
+export function docKeyResolver(ws: WorkspaceDTO): (key: string) => string | undefined {
   const byKey = new Map<string, string>();
+  for (const d of ws.items.docs) {
+    byKey.set(d.path, d.id);
+    const stem = d.path.slice(d.path.lastIndexOf("/") + 1).replace(/\.(md|markdown)$/i, "");
+    if (stem && !byKey.has(stem)) byKey.set(stem, d.id);
+  }
   for (const d of ws.items.docs) {
     byKey.set(d.id, d.id);
     if (d.uid) byKey.set(d.uid, d.id);
@@ -186,6 +236,7 @@ function docKeyResolver(ws: WorkspaceDTO): (key: string) => string | undefined {
 function linkedDocIds(ws: WorkspaceDTO): Set<string> {
   const linked = new Set<string>();
   const resolve = docKeyResolver(ws);
+  const byPath = new Map(ws.items.docs.map((d) => [d.path, d.id]));
 
   for (const d of ws.items.docs) {
     if (d.wireframe || (d.tasks && d.tasks.length > 0) || d.deprecatedBy || (d.related && d.related.length > 0)) {
@@ -198,6 +249,14 @@ function linkedDocIds(ws: WorkspaceDTO): Set<string> {
     for (const rel of d.related ?? []) {
       const r = resolve(rel);
       if (r) {
+        linked.add(r);
+        linked.add(d.id);
+      }
+    }
+    // Markdown-body links count in both directions (only when the target exists).
+    for (const lp of d.links ?? []) {
+      const r = byPath.get(lp);
+      if (r && r !== d.id) {
         linked.add(r);
         linked.add(d.id);
       }
@@ -223,11 +282,14 @@ function linkedDocIds(ws: WorkspaceDTO): Set<string> {
   return linked;
 }
 
-/** Docs with no links in or out (orphans) — for the Map's orphans panel. */
+/** Docs with no links in or out (orphans) — for the Map's orphans panel.
+    Root instruction files (README/CLAUDE/AGENTS) are exempt: the skill forbids
+    adding manifast frontmatter to them, so they'd otherwise be permanent
+    orphans keeping the warning badge lit on every project. */
 export function getOrphanDocs(ws: WorkspaceDTO): { id: string; title: string; path: string }[] {
   const linked = linkedDocIds(ws);
   return ws.items.docs
-    .filter((d) => !linked.has(d.id))
+    .filter((d) => !linked.has(d.id) && d.path.includes("/"))
     .map((d) => ({ id: d.id, title: d.title, path: d.path }));
 }
 
