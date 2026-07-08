@@ -82,6 +82,22 @@ describe("validateWorkspace", () => {
     expect(r.ok).toBe(true); // warnings don't fail (caller applies --strict)
   });
 
+  it("accepts execution-record doc types without frontmatter warnings", async () => {
+    const types = ["plan", "results", "handoff", "prompt"] as const;
+    for (const type of types) {
+      await writeFixture(
+        dir,
+        `docs/${type}.md`,
+        `---\nschema: manifast.doc/1\nid: ${type}-doc\ntype: ${type}\ntitle: ${type}\n---\n\nbody\n`,
+      );
+    }
+
+    const r = await run();
+    expect(r.issues.filter((i) => i.level === "warning")).toEqual([]);
+    expect(r.issues.filter((i) => i.level === "error")).toEqual([]);
+    expect(r.ok).toBe(true);
+  });
+
   it("flags a broken deprecatedBy reference", async () => {
     await writeFixture(
       dir,

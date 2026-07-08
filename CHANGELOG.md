@@ -4,6 +4,22 @@ All notable changes to Manifast. Published on npm as
 [`manifast`](https://www.npmjs.com/package/manifast) (`npm install -g manifast`).
 Building from source? Bump the version, then `npm run build && npm install -g .`.
 
+## 1.3.3 — frontmatter doc-type contract fix (2026-07-08)
+
+Fixes a contract drift in `manifast validate`: the bundled authoring guide
+documented `type: plan`, `type: results`, `type: handoff`, and `type: prompt`,
+but the runtime zod schema still rejected those four native `manifast.doc/1`
+frontmatter values.
+
+- **Doc frontmatter enum aligned** — `DocFrontmatterSchema` now accepts all
+  first-class document types documented in `SKILL.md` / `AGENTS.md`.
+- **Runtime inference reuses the schema list** — workspace doc-type inference now
+  reads the exported type list instead of maintaining a second manual set.
+- **Generated JSON schema refreshed** — `.manifast/schema/frontmatter.schema.json`
+  installed by `manifast init` now matches the zod source of truth.
+- **Regression tests added** — schema and validate coverage now includes the four
+  execution-record / prompt doc types, so this drift fails in CI next time.
+
 ## 1.3.2 — full English localization (2026-07-06)
 
 Manifast's entire user-facing surface is now English (it was Korean). No feature

@@ -5,6 +5,7 @@ import {
   NODE_TYPES,
   TasksFileSchema,
   PlanFileSchema,
+  DOC_TYPES,
   DocFrontmatterSchema,
   ManifestSchema,
   DiagramFileSchema,
@@ -109,6 +110,13 @@ describe("doc frontmatter schema", () => {
     if (r.success) {
       expect(r.data.related).toEqual(["a", "b"]);
       expect(r.data.sources).toEqual(["src/x.ts"]);
+    }
+  });
+
+  it("accepts every first-class doc type documented by the skill", () => {
+    for (const type of DOC_TYPES) {
+      const r = DocFrontmatterSchema.safeParse({ ...base, type });
+      expect(r.success, `${type} should parse`).toBe(true);
     }
   });
 

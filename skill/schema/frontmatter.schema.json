@@ -25,7 +25,11 @@
             "howto",
             "reference",
             "explanation",
-            "architecture"
+            "architecture",
+            "plan",
+            "results",
+            "handoff",
+            "prompt"
           ]
         },
         "title": {

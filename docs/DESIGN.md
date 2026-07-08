@@ -616,7 +616,8 @@ updatedAt: 2026-06-24
   `sources`(string[]=이 문서가 기술하는 코드 경로, drift 입력), `critical`(boolean).
   `DocFrontmatterSchema`(zod)에 추가 → `npm run gen:schema`로 `skill/schema/*.json`(에이전트 계약)
   자동 전파.
-- **`type` 확장**: `prd|spec|doc` → `+ adr|tutorial|howto|reference|explanation|architecture`.
+- **`type` 확장**: `prd|spec|doc` →
+  `+ adr|tutorial|howto|reference|explanation|architecture|plan|results|handoff|prompt`.
   first-class **지원**이며 의무가 아니다(스킬이 프로젝트 성격에 맞는 정본 세트를 고른다 —
   ceremony-overkill 회피).
 - **status 어휘 유지**: `draft|active|done|deprecated|archived` 그대로(신규 용어 도입 없음).
@@ -659,6 +660,9 @@ updatedAt: 2026-06-24
   `manifast.diagram/1`의 `kind: architecture`로 C4 L1(Context)/L2(Container)를 그린다.
 - **Diátaxis 4타입**(`tutorial|howto|reference|explanation`): 유저 대상 문서가 있을 때.
   한 페이지에 타입 혼합 금지.
+- **실행 기록 타입**(`plan|results|handoff`): 구현 계획·완료 보고·에이전트 간 인수인계 기록을
+  `docs/` 아래에서 추적할 때.
+- **프롬프트 타입**(`prompt`): 재사용 가능한 정본 LLM 프롬프트를 `docs/prompts/`에서 버전 관리할 때.
 
 - **한계**: 신선도/drift의 *판정*과 dedup·클러스터링·요약·ROT 분류는 모두 에이전트(스킬) 몫이며,
   앱은 mtime 기반 경량 신호 계산과 렌더만 한다(인앱 AI 없음). 깊은 이동/리뷰 이력은 git 영역.

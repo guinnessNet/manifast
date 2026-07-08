@@ -8,6 +8,7 @@ import {
   WireframeSchema,
   TasksFileSchema,
   PlanFileSchema,
+  DOC_TYPES as DOC_TYPE_VALUES,
   DocFrontmatterSchema,
   ManifestSchema,
   DiagramFileSchema,
@@ -257,17 +258,7 @@ function extractBodyLinks(body: string, rel: string): string[] | undefined {
   return out.size ? [...out] : undefined;
 }
 
-const DOC_TYPES = new Set([
-  "prd",
-  "spec",
-  "doc",
-  "adr",
-  "tutorial",
-  "howto",
-  "reference",
-  "explanation",
-  "architecture",
-]);
+const DOC_TYPES = new Set<string>(DOC_TYPE_VALUES);
 
 function inferDocType(rel: string, fm: Record<string, unknown>): DocMeta["type"] {
   const t = fm.type;

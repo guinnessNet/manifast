@@ -4,9 +4,10 @@ export const DocStatusSchema = z.enum(["draft", "active", "done", "deprecated", 
 export type DocStatus = z.infer<typeof DocStatusSchema>;
 
 // First-class document types (v4): planning (prd/spec/doc), decision records
-// (adr), architecture (arc42/C4), and the Diátaxis four. Supported, not mandated
-// — the skill picks the right set per project (see DESIGN 부록 D.6).
-export const DocTypeSchema = z.enum([
+// (adr), architecture (arc42/C4), the Diátaxis four, execution records, and
+// reusable prompts. Supported, not mandated — the skill picks the right set per
+// project (see DESIGN 부록 D.6).
+export const DOC_TYPES = [
   "prd",
   "spec",
   "doc",
@@ -16,7 +17,12 @@ export const DocTypeSchema = z.enum([
   "reference",
   "explanation",
   "architecture",
-]);
+  "plan",
+  "results",
+  "handoff",
+  "prompt",
+] as const;
+export const DocTypeSchema = z.enum(DOC_TYPES);
 export type DocType = z.infer<typeof DocTypeSchema>;
 
 // PRD / spec / doc frontmatter. Failures here are non-fatal warnings: the

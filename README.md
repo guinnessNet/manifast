@@ -4,7 +4,7 @@
 
 ![Manifast — AI writes files, Manifast visualizes them locally](https://raw.githubusercontent.com/guinnessNet/manifast/main/docs/screenshots/manifast-overview.png)
 
-> v1.3.2 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
+> v1.3.3 · version history in [CHANGELOG.md](https://github.com/guinnessNet/manifast/blob/main/CHANGELOG.md) · working on Manifast's own code? see [CLAUDE.md](https://github.com/guinnessNet/manifast/blob/main/CLAUDE.md)
 
 **How it works:** an AI coding agent ([Claude Code](https://www.claude.com/product/claude-code)
 or [Codex](https://developers.openai.com/codex/cli/)) writes structured files into a
@@ -245,9 +245,10 @@ Authoritative details live in the installed `SKILL.md` / `AGENTS.md` and in
 - `wireframes/<id>.json` — `schema: "manifast.wireframe/1"`, a screen with a
   `root` node tree. Each node has a parent-relative `frame {x,y,w,h}`. Only `Box`
   may contain `children`.
-- `prd/prd.md`, `specs/<id>.md` — `schema: manifast.doc/1` YAML frontmatter
-  (`id`, `type: prd|spec`, `title`, optional `status`, `wireframe`, `tasks[]`,
-  `related[]`, `sources[]`, `updatedAt`) + Markdown body.
+- `prd/prd.md`, `specs/<id>.md`, `docs/**/*.md` — `schema: manifast.doc/1`
+  YAML frontmatter (`id`, one of the documented `type` values, `title`,
+  optional `status`, `wireframe`, `tasks[]`, `related[]`, `sources[]`,
+  `updatedAt`) + Markdown body.
 - `tasks/tasks.json` — `schema: "manifast.tasks/1"`, `tasks[]`.
 - `plan/plan.json` — `schema: "manifast.plan/1"`, `phases[]`.
 - `diagrams/<id>.json` — `schema: "manifast.diagram/1"`, `nodes[]`, `edges[]`,
